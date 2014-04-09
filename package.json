@@ -1,0 +1,13 @@
+{
+  "name": "wadl-client",
+  "version": "0.0.0",
+  "description": "Generate a Javascript client for a web API providing a WADL description",
+  "main": "wadl-client.js",
+  "keywords": [
+    "wadl",
+    "client",
+    "api"
+  ],
+  "author": "Rodolphe Belouin <rodolphe.belouin@gmail.com>",
+  "license": "BSD"
+}
