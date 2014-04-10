@@ -1,4 +1,4 @@
-module.exports = {
+var resources = {
   "//invoice/external/{bid}": [{
     "verb": "POST",
     "name": "updateInvoice",
@@ -1730,3 +1730,7 @@ module.exports = {
     }]
   }]
 };
+
+if(typeof module != "undefined" && module.exports) {
+  module.exports = resources;
+}

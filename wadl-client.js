@@ -1,6 +1,62 @@
-var _ = require("lodash");
-var request = require("request");
-var Promise = require("pacta");
+/* If require is defined, load dependencies */
+if(typeof require == "function") {
+  var _ = require("lodash");
+  var request = require("request");
+  var Promise = require("pacta");
+}
+
+var WadlClient = {};
+
+/* Redefine request for node environment */
+var sendNodeRequest = function(options) {
+  var result = new Promise();
+
+  request(options, function(error, response, body) {
+    if(error) {
+      result.reject(error);
+    }
+    else if(response.statusCode >= 200 && response.statusCode < 300) {
+      result.resolve(body);
+    }
+    else {
+      result.reject(body);
+    }
+  });
+
+  return result;
+};
+
+/* Redefine request for browser environment */
+var sendBrowserRequest = function(options) {
+  options = options || {};
+  options.headers = options.headers || {};
+
+  var result = new Promise();
+  var xhr = new XMLHttpRequest();
+
+  xhr.onreadystatechange = function() {
+    if(xhr.readyState == 4) {
+      if(xhr.status >= 200 && xhr.status < 300) {
+        result.resolve(xhr.responseText);
+      }
+      else {
+        result.reject(xhr.responseText);
+      }
+    }
+  };
+
+  xhr.open(options.method || "GET", options.uri);
+
+  for(var name in options.headers) {
+    if(options.headers.hasOwnProperty(name)) {
+      xhr.setRequestHeader(name, options.headers[name]);
+    }
+  }
+
+  xhr.send();
+
+  return result;
+};
 
 var sendRequest = function(options) {
   var host = options.host || "";
@@ -19,33 +75,17 @@ var sendRequest = function(options) {
         host = userOptions ? (userOptions.host || host) : host;
         headers = userOptions ? (userOptions.headers || headers) : headers;
 
-        var requestOptions = {
+        return (request ? sendNodeRequest : sendBrowserRequest)({
           uri: host + path,
           method: verb.toUpperCase(),
           headers: headers
-        };
-
-        var result = new Promise();
-
-        request(requestOptions, function(error, response, body) {
-          if(error) {
-            result.reject(error);
-          }
-          else if(response.statusCode >= 400) {
-            result.reject(body);
-          }
-          else {
-            result.resolve(body);
-          }
         });
-
-        return result;
       };
     };
   };
 };
 
-exports.buildClient = function(endpoints, settings) {
+WadlClient.buildClient = function(endpoints, settings) {
   var client = {};
 
   for(var path in endpoints) {
@@ -69,3 +109,8 @@ exports.buildClient = function(endpoints, settings) {
 
   return client;
 };
+
+/* Export WadlClient if we are in a node environment */
+if(typeof module != "undefined" && module.exports) {
+  module.exports = WadlClient;
+}

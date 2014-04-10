@@ -1,5 +1,6 @@
-var resources = require("./resources.js");
-var client = require("../wadl-client.js").buildClient(resources, {
+var resources = resources || require("./resources.js");
+var WadlClient = WadlClient || require("../wadl-client.js");
+var client = WadlClient.buildClient(resources, {
   host: "http://api.clever-cloud.com/v2"
 });
 
