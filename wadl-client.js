@@ -53,7 +53,7 @@ var sendBrowserRequest = function(options) {
     }
   }
 
-  xhr.send();
+  xhr.send(options.body);
 
   return result;
 };
@@ -78,7 +78,8 @@ var sendRequest = function(options) {
         return (request ? sendNodeRequest : sendBrowserRequest)({
           uri: host + path,
           method: verb.toUpperCase(),
-          headers: headers
+          headers: headers,
+          body: userOptions ? userOptions.data : data
         });
       };
     };
