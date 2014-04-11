@@ -1,6 +1,6 @@
 var WadlClient = (function() {
   /* If require is defined, load dependencies */
-  if(typeof require == "function") {
+  if(typeof module != "undefined" && module.exports && typeof require == "function") {
     var _ = require("lodash");
     var request = require("request");
     var Promise = require("pacta");
