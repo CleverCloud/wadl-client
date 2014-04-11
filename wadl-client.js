@@ -84,6 +84,18 @@ var WadlClient = (function() {
     };
   };
 
+  var buildNodeFromSegments = function(node, segments) {
+    var segment = segments[0];
+
+    if(segment) {
+      node[segment] = node[segment] || {};
+      return buildNodeFromSegments(node[segment], segments.slice(1));
+    }
+    else {
+      return node;
+    }
+  };
+
   WadlClient.buildClient = function(endpoints, settings) {
     var client = {};
 
@@ -94,14 +106,12 @@ var WadlClient = (function() {
         formattedPath = formattedPath[formattedPath.length - 1] == "/" ? formattedPath.slice(0, formattedPath.length - 1) : formattedPath;
 
         var segments = formattedPath.split("/");
-        var segment = segments.reduce(function(node, segment) {
-          return node[segment] = node[segment] || {};
-        }, client);
+        var node = buildNodeFromSegments(client, segments);
 
         var methods = endpoints[path];
         for(var i = 0; i < methods.length; i++) {
           var method = methods[i];
-          segment[method.verb == "DELETE" ? "remove" : method.verb.toLowerCase()] = sendRequest(settings)(method.verb, path);
+          node[method.verb == "DELETE" ? "remove" : method.verb.toLowerCase()] = sendRequest(settings)(method.verb, path);
         }
       }
     }

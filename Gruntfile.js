@@ -17,12 +17,16 @@ module.exports = function(grunt) {
     },
     jasmine_node: {
       all: ["spec/"]
+    },
+    jshint: {
+      all: ["wadl-client.js", "spec/**/*.js"]
     }
   });
 
   grunt.loadNpmTasks('grunt-bower-concat');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-jasmine-node');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
 
   grunt.registerTask('start-test-server', function() {
     testServer.start();
@@ -35,5 +39,5 @@ module.exports = function(grunt) {
   grunt.registerTask("test-node", "jasmine_node");
   grunt.registerTask("test-browser", "bower_concat", "jasmine");
   grunt.registerTask("test", ["test-node", "test-browser"]);
-  grunt.registerTask("default", ["start-test-server", "test", "stop-test-server"]);
+  grunt.registerTask("default", ["jshint", "start-test-server", "test", "stop-test-server"]);
 };
