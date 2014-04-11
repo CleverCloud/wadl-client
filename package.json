@@ -12,8 +12,7 @@
   "license": "BSD",
   "dependencies": {
     "request": "^2.34.0",
-    "pacta": "^0.5.0",
-    "lodash": "^2.4.1"
+    "pacta": "^0.5.0"
   },
   "devDependencies": {
     "grunt": "^0.4.4",
