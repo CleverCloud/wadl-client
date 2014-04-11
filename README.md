@@ -1,6 +1,8 @@
 wadl-client
 ===========
 
+[![Build Status](https://travis-ci.org/rbelouin/wadl-client.svg?branch=master)](https://travis-ci.org/rbelouin/wadl-client)
+
 Generate a Javascript client for a web API providing a WADL description.
 
 How to build
