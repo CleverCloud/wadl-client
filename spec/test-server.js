@@ -10,6 +10,10 @@ app.get("/test/static", function(req, res) {
   res.send("OK");
 });
 
+app.get("/test/query", function(req, res) {
+  res.send(req.query.a ? "a=" + req.query.a : "NOK");
+});
+
 app.get("/test/dynamic/:param", function(req, res) {
   res.send(req.params.param);
 });

@@ -5,6 +5,19 @@ var WadlClient = (function() {
 
   var WadlClient = {};
 
+  var querystring = function(params) {
+    var pairs = [];
+    params = params || {};
+
+    for(var name in params) {
+      if(params.hasOwnProperty(name)) {
+        pairs.push(typeof params[name] != "undefined" ? encodeURIComponent(name) + "=" + encodeURIComponent(params[name]) : encodeURIComponent(name));
+      }
+    }
+
+    return pairs.length === 0 ? "" : "?" + pairs.join("&");
+  };
+
   /* Redefine request for node environment */
   var sendNodeRequest = function(options) {
     var result = new P();
@@ -43,7 +56,7 @@ var WadlClient = (function() {
       }
     };
 
-    xhr.open(options.method || "GET", options.uri);
+    xhr.open(options.method || "GET", options.uri + querystring(options.qs));
 
     for(var name in options.headers) {
       if(options.headers.hasOwnProperty(name)) {
@@ -70,6 +83,7 @@ var WadlClient = (function() {
 
         return function(data) {
           var userOptions = typeof data == "object" && data;
+          var qs = userOptions && userOptions.query;
           host = userOptions ? (userOptions.host || host) : host;
           headers = userOptions ? (userOptions.headers || headers) : headers;
 
@@ -77,6 +91,7 @@ var WadlClient = (function() {
             uri: host + path,
             method: verb.toUpperCase(),
             headers: headers,
+            qs: qs,
             body: userOptions ? userOptions.data : data
           });
         };

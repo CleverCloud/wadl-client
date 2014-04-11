@@ -20,6 +20,22 @@ describe("wadl-client", function() {
     });
   });
 
+  it("should be able to download resources with query params", function(done) {
+    var p = client.test.query.get()({
+      query: {a: 12345}
+    });
+
+    p.map(function(result) {
+      expect(result).toBe("a=12345");
+      done();
+    });
+
+    p.mapError(function(error) {
+      expect(error).toBe("a=12345"); // make test fail if any error
+      done();
+    });
+  });
+
   it("should be able to download resources with path params", function(done) {
     var p = client.test.dynamic._.get("12345")();
 

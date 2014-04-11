@@ -4,6 +4,14 @@ var resources = {
     "name": "getStatic",
     "params": []
   }],
+  "/test/query": [{
+    "verb": "GET",
+    "name": "getQuery",
+    "params": [{
+      "name": "a",
+      "style": "query"
+    }]
+  }],
   "/test/dynamic/{param}": [{
     "verb": "GET",
     "name": "getDynamic",
