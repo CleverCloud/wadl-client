@@ -1,12 +1,10 @@
 var http = require("http");
 var express = require("express");
-var textBody = require('body');
+var textBody = require("body");
 
 var app = express();
 
-app.get("/", function(req, res) {
-  res.send("");
-});
+app.use(express.static(__dirname + "/.."));
 
 app.get("/test/static", function(req, res) {
   res.send("OK");

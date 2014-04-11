@@ -1,0 +1,28 @@
+{
+  "name": "wadl-client",
+  "main": "wadl-client.js",
+  "version": "0.0.0",
+  "homepage": "https://github.com/rbelouin/wadl-client",
+  "authors": [
+    "Rodolphe Belouin <rodolphe.belouin@gmail.com>"
+  ],
+  "description": "Generate a Javascript client for a web API providing a WADL description",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "wadl",
+    "client",
+    "api"
+  ],
+  "license": "BSD",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components"
+  ],
+  "dependencies": {
+    "pacta": "~0.5.0"
+  }
+}
