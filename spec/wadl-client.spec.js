@@ -1,38 +1,107 @@
 var resources = resources || require("./resources.js");
 var WadlClient = WadlClient || require("../wadl-client.js");
+
 var client = WadlClient.buildClient(resources, {
-  host: "http://api.clever-cloud.com/v2"
+  host: "http://localhost:3000"
 });
 
 describe("wadl-client", function() {
   it("should be able to download resources", function(done) {
-    var p_packages = client.products.packages.get()();
+    var p = client.test.static.get()();
 
-    p_packages.map(function(packages) {
-      expect(packages).not.toBeUndefined();
+    p.map(function(result) {
+      expect(result).toBe("OK");
       done();
     });
 
-    p_packages.mapError(function(error) {
-      expect(false).toBe(true); // make test fail if any error
+    p.mapError(function(error) {
+      expect(error).toBe("OK"); // make test fail if any error
       done();
     });
   });
 
-  it("should be able to download resources with custom headers", function(done) {
-    var p_user = client.self.get()({
-      headers: {
-        Authorization: 'OAuth realm="http://ccapi.cleverapps.io/v2/oauth", oauth_consumer_key="DVXgEDKLATkZkSRqN7iQ0KwWSvtNaD", oauth_token="51607c6d1a0f49e0920581940ed6af99", oauth_signature_method="PLAINTEXT", oauth_signature="GPKbDuphYWFr3faS5dg64eCjsrpxGY&b34a803f643146b0887679b487b06417", oauth_timestamp="1397119729", oauth_nonce="296340"'
-      }
-    });
+  it("should be able to download resources with path params", function(done) {
+    var p = client.test.dynamic._.get("12345")();
 
-    p_user.map(function(user) {
-      expect(user).not.toBeUndefined();
+    p.map(function(result) {
+      expect(result).toBe("12345");
       done();
     });
 
-    p_user.mapError(function(error) {
-      expect(false).toBe(true); // make test fail if any error
+    p.mapError(function(error) {
+      expect(error).toBe("12345"); // make test fail if any error
+      done();
+    });
+  });
+
+  it("should be able to download resources by giving specific header at building time", function(done) {
+    var client = WadlClient.buildClient(resources, {
+      host: "http://localhost:3000",
+      headers: {
+        Authorization: "12345"
+      }
+    });
+
+    var p = client.test.private.get()();
+
+    p.map(function(result) {
+      expect(result).toBe("OK");
+      done();
+    });
+
+    p.mapError(function(error) {
+      expect(error).toBe("OK");
+      done();
+    });
+  });
+
+  it("should be able to download resources by giving specific header at sending time", function(done) {
+    var p = client.test.private.get()({
+      headers: {
+        Authorization: "12345"
+      }
+    });
+
+    p.map(function(result) {
+      expect(result).toBe("OK");
+      done();
+    });
+
+    p.mapError(function(error) {
+      expect(error).toBe("OK");
+      done();
+    });
+  });
+
+  it("should be able to upload resources", function(done) {
+    var p = client.test.upload.post()("12345");
+
+    p.map(function(result) {
+      expect(result).toBe("12345");
+      done();
+    });
+
+    p.mapError(function(error) {
+      expect(error).toBe("12345");
+      done();
+    });
+  });
+
+  it("should be able to upload resources with a specific header", function(done) {
+    var p = client.test.private.upload.put()({
+      data: "12345",
+      headers: {
+        Authorization: "12345"
+      }
+    });
+
+    p.map(function(result) {
+      expect(result).toBe("12345");
+      done();
+    });
+
+    p.mapError(function(error) {
+      expect(error).toBe("12345");
       done();
     });
   });
