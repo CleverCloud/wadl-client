@@ -37,7 +37,7 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask("test-node", "jasmine_node");
-  grunt.registerTask("test-browser", "bower_concat", "jasmine");
+  grunt.registerTask("test-browser", ["bower_concat", "jasmine"]);
   grunt.registerTask("test", ["test-node", "test-browser"]);
   grunt.registerTask("default", ["jshint", "start-test-server", "test", "stop-test-server"]);
 };
