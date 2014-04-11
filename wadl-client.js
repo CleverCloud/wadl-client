@@ -1,16 +1,13 @@
 var WadlClient = (function() {
-  /* If require is defined, load dependencies */
-  if(typeof module != "undefined" && module.exports && typeof require == "function") {
-    var _ = require("lodash");
-    var request = require("request");
-    var Promise = require("pacta");
-  }
+  /* Dependency aliases (to make WadlClient work on both node and browser environments) */
+  var P = typeof Promise != "undefined" ? Promise : require("pacta");
+  var request = typeof module != "undefined" && module.exports && typeof require == "function" ? require("request") : null;
 
   var WadlClient = {};
 
   /* Redefine request for node environment */
   var sendNodeRequest = function(options) {
-    var result = new Promise();
+    var result = new P();
 
     request(options, function(error, response, body) {
       if(error) {
@@ -32,7 +29,7 @@ var WadlClient = (function() {
     options = options || {};
     options.headers = options.headers || {};
 
-    var result = new Promise();
+    var result = new P();
     var xhr = new XMLHttpRequest();
 
     xhr.onreadystatechange = function() {
