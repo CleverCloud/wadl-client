@@ -34,6 +34,16 @@ var resources = {
     "verb": "PUT",
     "name": "putPrivateData",
     "params": []
+  }],
+  "/test/json": [{
+    "verb": "GET",
+    "name": "getJSONData",
+    "params": []
+  }],
+  "/test/xml": [{
+    "verb": "GET",
+    "name": "getXMLData",
+    "params": []
   }]
 };
 

@@ -34,6 +34,19 @@ app.put("/test/private/upload", function(req, res) {
   });
 });
 
+app.get("/test/json", function(req, res) {
+  res.setHeader("Content-Type", "application/json");
+  res.send(JSON.stringify({
+    a: 1,
+    b: 2
+  }));
+});
+
+app.get("/test/xml", function(req, res) {
+  res.setHeader("Content-Type", "application/atom+xml");
+  res.send("<a>1</a>");
+});
+
 var server;
 
 exports.start = function() {

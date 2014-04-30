@@ -2,6 +2,7 @@ var WadlClient = (function() {
   /* Dependency aliases (to make WadlClient work on both node and browser environments) */
   var P = typeof Promise != "undefined" ? Promise : require("pacta");
   var request = typeof module != "undefined" && module.exports && typeof require == "function" ? require("request") : null;
+  var parser = typeof module != "undefined" && module.exports && typeof require == "function" ? require("xml2json") : null;
 
   var WadlClient = {};
 
@@ -24,10 +25,32 @@ var WadlClient = (function() {
 
     request(options, function(error, response, body) {
       if(error) {
-        result.reject(error);
+        if(options.parseJSON && response.headers["content-type"] == "application/json") {
+          result.reject(JSON.parse(body));
+        }
+        else if(options.parseXML && ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"].indexOf(response.headers["content-type"]) >= 0) {
+          result.reject(parser.toJson(body, {
+            object: true,
+            arrayNotation: true
+          }));
+        }
+        else {
+          result.reject(body);
+        }
       }
       else if(response.statusCode >= 200 && response.statusCode < 300) {
-        result.resolve(body);
+        if(options.parseJSON && response.headers["content-type"] == "application/json") {
+          result.resolve(JSON.parse(body));
+        }
+        else if(options.parseXML && ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"].indexOf(response.headers["content-type"]) >= 0) {
+          result.resolve(parser.toJson(body, {
+            object: true,
+            arrayNotation: true
+          }));
+        }
+        else {
+          result.resolve(body);
+        }
       }
       else {
         result.reject(body);
@@ -48,10 +71,26 @@ var WadlClient = (function() {
     xhr.onreadystatechange = function() {
       if(xhr.readyState == 4) {
         if(xhr.status >= 200 && xhr.status < 300) {
-          result.resolve(xhr.responseText);
+          if(options.parseJSON && xhr.getResponseHeader("Content-Type") == "application/json") {
+            result.resolve(JSON.parse(xhr.responseText));
+          }
+          else if(options.parseXML && ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"].indexOf(xhr.getResponseHeader("Content-Type")) >= 0) {
+            result.resolve(xhr.responseXML);
+          }
+          else {
+            result.resolve(xhr.responseText);
+          }
         }
         else {
-          result.reject(xhr.responseText);
+          if(options.parseJSON && xhr.getResponseHeader("Content-Type") == "application/json") {
+            result.reject(JSON.parse(xhr.responseText));
+          }
+          else if(options.parseXML && ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"].indexOf(xhr.getResponseHeader("Content-Type")) >= 0) {
+            result.reject(xhr.responseXML);
+          }
+          else {
+            result.reject(xhr.responseText);
+          }
         }
       }
     };
@@ -72,6 +111,8 @@ var WadlClient = (function() {
   var sendRequest = function(options) {
     var host = options.host || "";
     var headers = options.headers || {};
+    var parseJSON = options.parseJSON || false;
+    var parseXML = options.parseXML || false;
 
     return function(verb, path_template) {
       return function() {
@@ -92,7 +133,9 @@ var WadlClient = (function() {
             method: verb.toUpperCase(),
             headers: headers,
             qs: qs,
-            body: userOptions ? userOptions.data : data
+            body: userOptions ? userOptions.data : data,
+            parseJSON: parseJSON,
+            parseXML: parseXML
           });
         };
       };
