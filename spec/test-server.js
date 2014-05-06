@@ -47,6 +47,15 @@ app.get("/test/xml", function(req, res) {
   res.send("<a>1</a>");
 });
 
+app.get("/test/json/fail", function(req, res) {
+  res.statusCode = 400;
+  res.setHeader("Content-Type", "application/json");
+  res.send(JSON.stringify({
+    a: 1,
+    b: 2
+  }));
+});
+
 var server;
 
 exports.start = function() {

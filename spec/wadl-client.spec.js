@@ -139,8 +139,8 @@ describe("wadl-client", function() {
     });
 
     p.mapError(function(error) {
-      expect(result.a).toBe(1);
-      expect(result.b).toBe(2);
+      expect(error.a).toBe(1);
+      expect(error.b).toBe(2);
       done();
     });
   });
@@ -168,6 +168,27 @@ describe("wadl-client", function() {
 
     p.mapError(function(error) {
       expect(false).toBe(true);
+      done();
+    });
+  });
+
+  it("should be able to parse JSON resources if parseJSON setting is set to true, even on error", function(done) {
+    var client = WadlClient.buildClient(resources, {
+      host: "http://localhost:3000",
+      parseJSON: true
+    });
+
+    var p = client.test.json.fail.get()();
+
+    p.map(function(result) {
+      expect(result.a).toBe(1);
+      expect(result.b).toBe(2);
+      done();
+    });
+
+    p.mapError(function(error) {
+      expect(error.a).toBe(1);
+      expect(error.b).toBe(2);
       done();
     });
   });

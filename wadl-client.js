@@ -25,18 +25,7 @@ var WadlClient = (function() {
 
     request(options, function(error, response, body) {
       if(error) {
-        if(options.parseJSON && response.headers["content-type"] == "application/json") {
-          result.reject(JSON.parse(body));
-        }
-        else if(options.parseXML && ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"].indexOf(response.headers["content-type"]) >= 0) {
-          result.reject(parser.toJson(body, {
-            object: true,
-            arrayNotation: true
-          }));
-        }
-        else {
-          result.reject(body);
-        }
+        result.reject(error);
       }
       else if(response.statusCode >= 200 && response.statusCode < 300) {
         if(options.parseJSON && response.headers["content-type"] == "application/json") {
@@ -53,7 +42,18 @@ var WadlClient = (function() {
         }
       }
       else {
-        result.reject(body);
+        if(options.parseJSON && response.headers["content-type"] == "application/json") {
+          result.reject(JSON.parse(body));
+        }
+        else if(options.parseXML && ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"].indexOf(response.headers["content-type"]) >= 0) {
+          result.reject(parser.toJson(body, {
+            object: true,
+            arrayNotation: true
+          }));
+        }
+        else {
+          result.reject(body);
+        }
       }
     });
 
