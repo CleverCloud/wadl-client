@@ -213,4 +213,21 @@ describe("wadl-client", function() {
       done();
     });
   });
+
+  it("must not fail when checking Content-Type header", function(done) {
+    var client = WadlClient.buildClient(resources, {
+      host: "http://localhost:3000",
+      parseJSON: true
+    });
+
+    var p = client.test.json3.get()();
+
+    p.map(function() {
+      done();
+    });
+
+    p.mapError(function() {
+      done();
+    });
+  });
 });

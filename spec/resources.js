@@ -45,6 +45,11 @@ var resources = {
     "name": "getJSONData2",
     "params": []
   }],
+  "/test/json3": [{
+    "verb": "GET",
+    "name": "getJSONData3",
+    "params": []
+  }],
   "/test/xml": [{
     "verb": "GET",
     "name": "getXMLData",

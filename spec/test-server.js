@@ -50,6 +50,10 @@ app.get("/test/json2", function(req, res) {
   }));
 });
 
+app.get("/test/json3", function(req, res) {
+  res.send(null);
+});
+
 app.get("/test/xml", function(req, res) {
   res.setHeader("Content-Type", "application/atom+xml");
   res.send("<a>1</a>");

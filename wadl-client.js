@@ -33,13 +33,13 @@ var WadlClient = (function() {
 
   var nodeResponseHeaderHasValue = function(response, header, values) {
     return any(values, function(value) {
-      return response.headers[header].indexOf(value) >= 0;
+      return (response.headers[header] || "").indexOf(value) >= 0;
     });
   };
 
   var browserResponseHeaderHasValue = function(response, header, values) {
     return any(values, function(value) {
-      return response.getResponseHeader(header).indexOf(value) >= 0;
+      return (response.getResponseHeader(header) || "").indexOf(value) >= 0;
     });
   };
 
