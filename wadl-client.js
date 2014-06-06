@@ -19,6 +19,30 @@ var WadlClient = (function() {
     return pairs.length === 0 ? "" : "?" + pairs.join("&");
   };
 
+  var any = function(values, f) {
+    for(var i in values) {
+      var result = f(values[i]);
+
+      if(result) {
+        return result;
+      }
+    }
+
+    return false;
+  };
+
+  var nodeResponseHeaderHasValue = function(response, header, values) {
+    return any(values, function(value) {
+      return response.headers[header].indexOf(value) >= 0;
+    });
+  };
+
+  var browserResponseHeaderHasValue = function(response, header, values) {
+    return any(values, function(value) {
+      return response.getResponseHeader(header).indexOf(value) >= 0;
+    });
+  };
+
   /* Redefine request for node environment */
   var sendNodeRequest = function(options) {
     var result = new P();
@@ -28,10 +52,10 @@ var WadlClient = (function() {
         result.reject(error);
       }
       else if(response.statusCode >= 200 && response.statusCode < 300) {
-        if(options.parseJSON && response.headers["content-type"] == "application/json") {
+        if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
           result.resolve(JSON.parse(body));
         }
-        else if(options.parseXML && ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"].indexOf(response.headers["content-type"]) >= 0) {
+        else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
           result.resolve(parser.toJson(body, {
             object: true,
             arrayNotation: true
@@ -42,10 +66,10 @@ var WadlClient = (function() {
         }
       }
       else {
-        if(options.parseJSON && response.headers["content-type"] == "application/json") {
+        if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
           result.reject(JSON.parse(body));
         }
-        else if(options.parseXML && ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"].indexOf(response.headers["content-type"]) >= 0) {
+        else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
           result.reject(parser.toJson(body, {
             object: true,
             arrayNotation: true
@@ -71,10 +95,10 @@ var WadlClient = (function() {
     xhr.onreadystatechange = function() {
       if(xhr.readyState == 4) {
         if(xhr.status >= 200 && xhr.status < 300) {
-          if(options.parseJSON && xhr.getResponseHeader("Content-Type") == "application/json") {
+          if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
             result.resolve(JSON.parse(xhr.responseText));
           }
-          else if(options.parseXML && ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"].indexOf(xhr.getResponseHeader("Content-Type")) >= 0) {
+          else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
             result.resolve(xhr.responseXML);
           }
           else {
@@ -82,10 +106,10 @@ var WadlClient = (function() {
           }
         }
         else {
-          if(options.parseJSON && xhr.getResponseHeader("Content-Type") == "application/json") {
+          if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
             result.reject(JSON.parse(xhr.responseText));
           }
-          else if(options.parseXML && ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"].indexOf(xhr.getResponseHeader("Content-Type")) >= 0) {
+          else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
             result.reject(xhr.responseXML);
           }
           else {

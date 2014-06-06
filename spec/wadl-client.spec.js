@@ -145,6 +145,27 @@ describe("wadl-client", function() {
     });
   });
 
+  it("should be able to parse JSON resources even if Content-Type header has a charset token", function(done) {
+    var client = WadlClient.buildClient(resources, {
+      host: "http://localhost:3000",
+      parseJSON: true
+    });
+
+    var p = client.test.json2.get()();
+
+    p.map(function(result) {
+      expect(result.a).toBe(1);
+      expect(result.b).toBe(2);
+      done();
+    });
+
+    p.mapError(function(error) {
+      expect(error.a).toBe(1);
+      expect(error.b).toBe(2);
+      done();
+    });
+  });
+
   it("should be able to parse XML resources if parseXML setting is set to true", function(done) {
     var client = WadlClient.buildClient(resources, {
       host: "http://localhost:3000",
