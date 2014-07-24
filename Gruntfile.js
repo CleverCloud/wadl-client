@@ -7,23 +7,43 @@ module.exports = function(grunt) {
         dest: "spec/browser-dependencies.js"
       }
     },
+    browserify: {
+      test: {
+        files: {
+          "spec/bundle.js": "spec/wadl-client.spec.js"
+        },
+        options: {
+          ignore: ["request", "xml2json"]
+        }
+      }
+    },
     jasmine: {
-      src: ["spec/browser-dependencies.js", "spec/resources.js", "wadl-client.js"],
-      options: {
-        host: "http://localhost:3000/",
-        outfile: "index.html",
-        specs: "spec/wadl-client.spec.js"
+      browserify: {
+        options: {
+          host: "http://localhost:3000/",
+          outfile: "index.html",
+          specs: "spec/bundle.js"
+        }
+      },
+      default: {
+        src: ["spec/browser-dependencies.js", "spec/resources.js", "wadl-client.js"],
+        options: {
+          host: "http://localhost:3000/",
+          outfile: "index.html",
+          specs: "spec/wadl-client.spec.js"
+        }
       }
     },
     jasmine_node: {
       all: ["spec/"]
     },
     jshint: {
-      all: ["wadl-client.js", "spec/**/*.js"]
+      all: ["wadl-client.js", "spec/**/*.spec.js"]
     }
   });
 
   grunt.loadNpmTasks('grunt-bower-concat');
+  grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-jasmine-node');
   grunt.loadNpmTasks('grunt-contrib-jshint');
@@ -37,7 +57,7 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask("test-node", "jasmine_node");
-  grunt.registerTask("test-browser", ["bower_concat", "jasmine"]);
+  grunt.registerTask("test-browser", ["bower_concat", "browserify", "jasmine"]);
   grunt.registerTask("test", ["test-node", "test-browser"]);
   grunt.registerTask("default", ["jshint", "start-test-server", "test", "stop-test-server"]);
 };

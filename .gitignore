@@ -2,3 +2,4 @@
 /bower_components
 /node_modules
 /spec/browser-dependencies.js
+/spec/bundle.js

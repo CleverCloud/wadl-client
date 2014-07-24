@@ -1,8 +1,8 @@
 var WadlClient = (function() {
   /* Dependency aliases (to make WadlClient work on both node and browser environments) */
-  var P = typeof Promise != "undefined" ? Promise : require("pacta");
-  var request = typeof module != "undefined" && module.exports && typeof require == "function" ? require("request") : null;
-  var parser = typeof module != "undefined" && module.exports && typeof require == "function" ? require("xml2json") : null;
+  var P = typeof require == "function" && require("pacta") ? require("pacta") : Promise;
+  var request = typeof XMLHttpRequest != "undefined" ? null : require("request");
+  var parser = typeof XMLHttpRequest != "undefined" ? null : require("xml2json");
 
   var WadlClient = {};
 

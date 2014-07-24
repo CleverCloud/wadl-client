@@ -1,8 +1,6 @@
 var resources = resources || require("./resources.js");
 var WadlClient = WadlClient || require("../wadl-client.js");
 
-var isServerSide = typeof module != "undefined" && module.exports && typeof require == "function";
-
 var client = WadlClient.buildClient(resources, {
   host: "http://localhost:3000"
 });
@@ -175,14 +173,14 @@ describe("wadl-client", function() {
     var p = client.test.xml.get()();
 
     p.map(function(result) {
-      if(isServerSide) {
-        expect(result.a).not.toBeUndefined();
-        expect(result.a[0]).toBe(1);
-      }
-      else {
+      if(result.getElementsByTagName) {
         var a = result.getElementsByTagName("a");
         expect(a && a[0]).not.toBeUndefined();
         expect(a[0].textContent).toBe("1");
+      }
+      else {
+        expect(result.a).not.toBeUndefined();
+        expect(result.a[0]).toBe(1);
       }
       done();
     });
