@@ -114,35 +114,59 @@ var WadlClient = (function() {
     });
   };
 
-  var sendRequest = function(options) {
-    var host = options.host || "";
-    var headers = options.headers || {};
-    var parse = options.parse || false;
-
-    return function(verb, path_template) {
-      return function() {
-        var params = Array.apply(Array, arguments);
-        var path = path_template.replace(/{[^}]*}/g, function(matched) {
+  var prepareRequest = function(verb, pathTemplate, defaultSettings) {
+    return function() {
+      var send = function(body) {
+        var host = send.host;
+        var params = Array.apply(Array, send.params);
+        var path = pathTemplate.replace(/{[^}]*}/g, function(matched) {
           var param = params.shift();
           return typeof param != "undefined" ? param : matched;
         });
 
-        return function(data) {
-          var userOptions = typeof data == "object" && data;
-          var qs = userOptions && userOptions.query;
-          host = userOptions ? (userOptions.host || host) : host;
-          headers = userOptions ? (userOptions.headers || headers) : headers;
-
-          return (request ? sendNodeRequest : sendBrowserRequest)({
-            uri: host + path,
-            method: verb.toUpperCase(),
-            headers: headers,
-            qs: qs,
-            body: userOptions ? userOptions.data : data,
-            parse: parse
-          });
-        };
+        return (request ? sendNodeRequest : sendBrowserRequest)({
+          uri: host + path,
+          method: verb.toUpperCase(),
+          headers: send.headers,
+          qs: send.query,
+          parse: send.parse,
+          body: body
+        });
       };
+
+      send.host = defaultSettings.host || "";
+      send.withHost = function(host) {
+        send.host = host;
+        return send;
+      };
+
+      send.params = [];
+      send.withParams = function(params) {
+        send.params = params;
+        return send;
+      };
+
+      send.headers = defaultSettings.headers || {};
+      send.withHeaders = function(headers) {
+        for(var name in headers) {
+          send.headers[name] = headers[name];
+        }
+        return send;
+      };
+
+      send.query = {};
+      send.withQuery = function(query) {
+        send.query = query;
+        return send;
+      };
+
+      send.parse = defaultSettings.parse;
+      send.withParsing = function(parse) {
+        send.parse = typeof parse == "undefined" ? true : parse;
+        return send;
+      };
+
+      return send;
     };
   };
 
@@ -173,7 +197,11 @@ var WadlClient = (function() {
         var methods = endpoints[path];
         for(var i = 0; i < methods.length; i++) {
           var method = methods[i];
-          node[method.verb == "DELETE" ? "remove" : method.verb.toLowerCase()] = sendRequest(settings)(method.verb, path);
+
+          Object.defineProperty(node, method.verb.toLowerCase(), {
+            get: prepareRequest(method.verb, path, settings || {}),
+            configurable: true
+          });
         }
       }
     }
