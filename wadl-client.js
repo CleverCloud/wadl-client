@@ -4,9 +4,45 @@ var WadlClient = (function() {
   var request = typeof XMLHttpRequest != "undefined" ? null : require("request");
   var parser = typeof XMLHttpRequest != "undefined" ? null : require("xml2json");
 
-  var WadlClient = {};
+  /* Utils */
+  var Utils = {};
 
-  var querystring = function(params) {
+  Utils.any = function(values, f) {
+    for(var i in values) {
+      var result = f(values[i]);
+
+      if(result) {
+        return result;
+      }
+    }
+
+    return false;
+  };
+
+  Utils.elem = function(array, values) {
+    return Utils.any(values, function(value) {
+      return array.indexOf(value) >= 0;
+    });
+  };
+
+  Utils.parseBody = function(response, body) {
+    var contentType = typeof XMLHttpRequest != "undefined" ? response.getResponseHeader("Content-Type") : response.headers["content-type"];
+
+    if(Utils.elem(contentType || "", ["application/json"])) {
+      return JSON.parse(typeof response.responseText != "undefined" ? response.responseText : body);
+    }
+    else if(Utils.elem(contentType || "", ["text/xml", "application/rss+xml", "application/rdf+xml", "application/atom+xml"])) {
+      return response.responseXML ? response.responseXML : parser.toJson(body, {
+        object: true,
+        arrayNotation: true
+      });
+    }
+    else {
+      return response.responseText || body;
+    }
+  };
+
+  Utils.querystring = function(params) {
     var pairs = [];
     params = params || {};
 
@@ -19,69 +55,25 @@ var WadlClient = (function() {
     return pairs.length === 0 ? "" : "?" + pairs.join("&");
   };
 
-  var any = function(values, f) {
-    for(var i in values) {
-      var result = f(values[i]);
-
-      if(result) {
-        return result;
-      }
-    }
-
-    return false;
+  Utils.send = function(sink, data) {
+    sink(data);
+    sink(new B.End());
   };
 
-  var nodeResponseHeaderHasValue = function(response, header, values) {
-    return any(values, function(value) {
-      return (response.headers[header] || "").indexOf(value) >= 0;
-    });
-  };
-
-  var browserResponseHeaderHasValue = function(response, header, values) {
-    return any(values, function(value) {
-      return (response.getResponseHeader(header) || "").indexOf(value) >= 0;
-    });
-  };
+  var WadlClient = {};
 
   /* Redefine request for node environment */
   var sendNodeRequest = function(options) {
     return B.fromBinder(function(sink) {
-      var send = function(data) {
-        sink(data);
-        sink(new B.End());
-      };
-
       request(options, function(error, response, body) {
         if(error) {
-          send(new B.Error(error));
+          Utils.send(sink, new B.Error(error));
         }
         else if(response.statusCode >= 200 && response.statusCode < 300) {
-          if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
-            send(JSON.parse(body));
-          }
-          else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-            send(parser.toJson(body, {
-              object: true,
-              arrayNotation: true
-            }));
-          }
-          else {
-            send(body);
-          }
+          Utils.send(sink, options.parse ? Utils.parseBody(response, body) : body);
         }
         else {
-          if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
-            send(new B.Error(JSON.parse(body)));
-          }
-          else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-            send(new B.Error(parser.toJson(body, {
-              object: true,
-              arrayNotation: true
-            })));
-          }
-          else {
-            send(new B.Error(body));
-          }
+          Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(response, body) : body));
         }
       });
 
@@ -95,41 +87,20 @@ var WadlClient = (function() {
     options.headers = options.headers || {};
 
     return B.fromBinder(function(sink) {
-      var send = function(data) {
-        sink(data);
-        sink(new B.End());
-      };
-
       var xhr = new XMLHttpRequest();
 
       xhr.onreadystatechange = function() {
         if(xhr.readyState == 4) {
           if(xhr.status >= 200 && xhr.status < 300) {
-            if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
-              send(JSON.parse(xhr.responseText));
-            }
-            else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-              send(xhr.responseXML);
-            }
-            else {
-              send(xhr.responseText);
-            }
+            Utils.send(sink, options.parse ? Utils.parseBody(xhr) : xhr.responseText);
           }
           else {
-            if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
-              send(new B.Error(JSON.parse(xhr.responseText)));
-            }
-            else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-              send(new B.Error(xhr.responseXML));
-            }
-            else {
-              send(new B.Error(xhr.responseText));
-            }
+            Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(xhr) : xhr.responseText));
           }
         }
       };
 
-      xhr.open(options.method || "GET", options.uri + querystring(options.qs));
+      xhr.open(options.method || "GET", options.uri + Utils.querystring(options.qs));
 
       for(var name in options.headers) {
         if(options.headers.hasOwnProperty(name)) {
@@ -146,8 +117,7 @@ var WadlClient = (function() {
   var sendRequest = function(options) {
     var host = options.host || "";
     var headers = options.headers || {};
-    var parseJSON = options.parseJSON || false;
-    var parseXML = options.parseXML || false;
+    var parse = options.parse || false;
 
     return function(verb, path_template) {
       return function() {
@@ -169,8 +139,7 @@ var WadlClient = (function() {
             headers: headers,
             qs: qs,
             body: userOptions ? userOptions.data : data,
-            parseJSON: parseJSON,
-            parseXML: parseXML
+            parse: parse
           });
         };
       };

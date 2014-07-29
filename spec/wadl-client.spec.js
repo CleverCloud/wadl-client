@@ -87,10 +87,10 @@ describe("wadl-client", function() {
     });
   });
 
-  it("should be able to parse JSON resources if parseJSON setting is set to true", function(done) {
+  it("should be able to parse JSON resources if parse setting is set to true", function(done) {
     var client = WadlClient.buildClient(resources, {
       host: "http://localhost:3000",
-      parseJSON: true
+      parse: true
     });
 
     var res = client.test.json.get()();
@@ -105,7 +105,7 @@ describe("wadl-client", function() {
   it("should be able to parse JSON resources even if Content-Type header has a charset token", function(done) {
     var client = WadlClient.buildClient(resources, {
       host: "http://localhost:3000",
-      parseJSON: true
+      parse: true
     });
 
     var res = client.test.json2.get()();
@@ -117,10 +117,10 @@ describe("wadl-client", function() {
     });
   });
 
-  it("should be able to parse XML resources if parseXML setting is set to true", function(done) {
+  it("should be able to parse XML resources if parse setting is set to true", function(done) {
     var client = WadlClient.buildClient(resources, {
       host: "http://localhost:3000",
-      parseXML: true
+      parse: true
     });
 
     var res = client.test.xml.get()();
@@ -139,10 +139,10 @@ describe("wadl-client", function() {
     });
   });
 
-  it("should be able to parse JSON resources if parseJSON setting is set to true, even on error", function(done) {
+  it("should be able to parse JSON resources if parse setting is set to true, even on error", function(done) {
     var client = WadlClient.buildClient(resources, {
       host: "http://localhost:3000",
-      parseJSON: true
+      parse: true
     });
 
     var res = client.test.json.fail.get()();
@@ -157,7 +157,7 @@ describe("wadl-client", function() {
   it("must not fail when checking Content-Type header", function(done) {
     var client = WadlClient.buildClient(resources, {
       host: "http://localhost:3000",
-      parseJSON: true
+      parse: true
     });
 
     var res = client.test.json3.get()();
