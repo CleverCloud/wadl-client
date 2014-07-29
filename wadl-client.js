@@ -1,6 +1,6 @@
 var WadlClient = (function() {
   /* Dependency aliases (to make WadlClient work on both node and browser environments) */
-  var P = typeof require == "function" && require("pacta") ? require("pacta") : Promise;
+  var B = typeof require == "function" && require("baconjs") ? require("baconjs") : Bacon;
   var request = typeof XMLHttpRequest != "undefined" ? null : require("request");
   var parser = typeof XMLHttpRequest != "undefined" ? null : require("xml2json");
 
@@ -45,43 +45,48 @@ var WadlClient = (function() {
 
   /* Redefine request for node environment */
   var sendNodeRequest = function(options) {
-    var result = new P();
+    return B.fromBinder(function(sink) {
+      var send = function(data) {
+        sink(data);
+        sink(new B.End());
+      };
 
-    request(options, function(error, response, body) {
-      if(error) {
-        result.reject(error);
-      }
-      else if(response.statusCode >= 200 && response.statusCode < 300) {
-        if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
-          result.resolve(JSON.parse(body));
+      request(options, function(error, response, body) {
+        if(error) {
+          send(new B.Error(error));
         }
-        else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-          result.resolve(parser.toJson(body, {
-            object: true,
-            arrayNotation: true
-          }));
-        }
-        else {
-          result.resolve(body);
-        }
-      }
-      else {
-        if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
-          result.reject(JSON.parse(body));
-        }
-        else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-          result.reject(parser.toJson(body, {
-            object: true,
-            arrayNotation: true
-          }));
+        else if(response.statusCode >= 200 && response.statusCode < 300) {
+          if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
+            send(JSON.parse(body));
+          }
+          else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
+            send(parser.toJson(body, {
+              object: true,
+              arrayNotation: true
+            }));
+          }
+          else {
+            send(body);
+          }
         }
         else {
-          result.reject(body);
+          if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
+            send(new B.Error(JSON.parse(body)));
+          }
+          else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
+            send(new B.Error(parser.toJson(body, {
+              object: true,
+              arrayNotation: true
+            })));
+          }
+          else {
+            send(new B.Error(body));
+          }
         }
-      }
+      });
+
+      return function(){};
     });
-
-    return result;
   };
 
   /* Redefine request for browser environment */
@@ -89,47 +94,53 @@ var WadlClient = (function() {
     options = options || {};
     options.headers = options.headers || {};
 
-    var result = new P();
-    var xhr = new XMLHttpRequest();
+    return B.fromBinder(function(sink) {
+      var send = function(data) {
+        sink(data);
+        sink(new B.End());
+      };
 
-    xhr.onreadystatechange = function() {
-      if(xhr.readyState == 4) {
-        if(xhr.status >= 200 && xhr.status < 300) {
-          if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
-            result.resolve(JSON.parse(xhr.responseText));
-          }
-          else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-            result.resolve(xhr.responseXML);
+      var xhr = new XMLHttpRequest();
+
+      xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4) {
+          if(xhr.status >= 200 && xhr.status < 300) {
+            if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
+              send(JSON.parse(xhr.responseText));
+            }
+            else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
+              send(xhr.responseXML);
+            }
+            else {
+              send(xhr.responseText);
+            }
           }
           else {
-            result.resolve(xhr.responseText);
+            if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
+              send(new B.Error(JSON.parse(xhr.responseText)));
+            }
+            else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
+              send(new B.Error(xhr.responseXML));
+            }
+            else {
+              send(new B.Error(xhr.responseText));
+            }
           }
         }
-        else {
-          if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
-            result.reject(JSON.parse(xhr.responseText));
-          }
-          else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-            result.reject(xhr.responseXML);
-          }
-          else {
-            result.reject(xhr.responseText);
-          }
+      };
+
+      xhr.open(options.method || "GET", options.uri + querystring(options.qs));
+
+      for(var name in options.headers) {
+        if(options.headers.hasOwnProperty(name)) {
+          xhr.setRequestHeader(name, options.headers[name]);
         }
       }
-    };
 
-    xhr.open(options.method || "GET", options.uri + querystring(options.qs));
+      xhr.send(options.body);
 
-    for(var name in options.headers) {
-      if(options.headers.hasOwnProperty(name)) {
-        xhr.setRequestHeader(name, options.headers[name]);
-      }
-    }
-
-    xhr.send(options.body);
-
-    return result;
+      return function(){};
+    });
   };
 
   var sendRequest = function(options) {

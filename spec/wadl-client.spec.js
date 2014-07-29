@@ -7,45 +7,30 @@ var client = WadlClient.buildClient(resources, {
 
 describe("wadl-client", function() {
   it("should be able to download resources", function(done) {
-    var p = client.test.static.get()();
+    var res = client.test.static.get()();
 
-    p.map(function(result) {
-      expect(result).toBe("OK");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("OK"); // make test fail if any error
+    res.onValue(function(data) {
+      expect(data).toBe("OK");
       done();
     });
   });
 
   it("should be able to download resources with query params", function(done) {
-    var p = client.test.query.get()({
+    var res = client.test.query.get()({
       query: {a: 12345}
     });
 
-    p.map(function(result) {
-      expect(result).toBe("a=12345");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("a=12345"); // make test fail if any error
+    res.onValue(function(data) {
+      expect(data).toBe("a=12345");
       done();
     });
   });
 
   it("should be able to download resources with path params", function(done) {
-    var p = client.test.dynamic._.get("12345")();
+    var res = client.test.dynamic._.get("12345")();
 
-    p.map(function(result) {
-      expect(result).toBe("12345");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("12345"); // make test fail if any error
+    res.onValue(function(data) {
+      expect(data).toBe("12345");
       done();
     });
   });
@@ -58,66 +43,46 @@ describe("wadl-client", function() {
       }
     });
 
-    var p = client.test.private.get()();
+    var res = client.test.private.get()();
 
-    p.map(function(result) {
-      expect(result).toBe("OK");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("OK");
+    res.onValue(function(data) {
+      expect(data).toBe("OK");
       done();
     });
   });
 
   it("should be able to download resources by giving specific header at sending time", function(done) {
-    var p = client.test.private.get()({
+    var res = client.test.private.get()({
       headers: {
         Authorization: "12345"
       }
     });
 
-    p.map(function(result) {
-      expect(result).toBe("OK");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("OK");
+    res.onValue(function(data) {
+      expect(data).toBe("OK");
       done();
     });
   });
 
   it("should be able to upload resources", function(done) {
-    var p = client.test.upload.post()("12345");
+    var res = client.test.upload.post()("12345");
 
-    p.map(function(result) {
-      expect(result).toBe("12345");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("12345");
+    res.onValue(function(data) {
+      expect(data).toBe("12345");
       done();
     });
   });
 
   it("should be able to upload resources with a specific header", function(done) {
-    var p = client.test.private.upload.put()({
+    var res = client.test.private.upload.put()({
       data: "12345",
       headers: {
         Authorization: "12345"
       }
     });
 
-    p.map(function(result) {
-      expect(result).toBe("12345");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("12345");
+    res.onValue(function(data) {
+      expect(data).toBe("12345");
       done();
     });
   });
@@ -128,17 +93,11 @@ describe("wadl-client", function() {
       parseJSON: true
     });
 
-    var p = client.test.json.get()();
+    var res = client.test.json.get()();
 
-    p.map(function(result) {
-      expect(result.a).toBe(1);
-      expect(result.b).toBe(2);
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error.a).toBe(1);
-      expect(error.b).toBe(2);
+    res.onValue(function(data) {
+      expect(data.a).toBe(1);
+      expect(data.b).toBe(2);
       done();
     });
   });
@@ -149,17 +108,11 @@ describe("wadl-client", function() {
       parseJSON: true
     });
 
-    var p = client.test.json2.get()();
+    var res = client.test.json2.get()();
 
-    p.map(function(result) {
-      expect(result.a).toBe(1);
-      expect(result.b).toBe(2);
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error.a).toBe(1);
-      expect(error.b).toBe(2);
+    res.onValue(function(data) {
+      expect(data.a).toBe(1);
+      expect(data.b).toBe(2);
       done();
     });
   });
@@ -170,23 +123,18 @@ describe("wadl-client", function() {
       parseXML: true
     });
 
-    var p = client.test.xml.get()();
+    var res = client.test.xml.get()();
 
-    p.map(function(result) {
-      if(result.getElementsByTagName) {
-        var a = result.getElementsByTagName("a");
+    res.onValue(function(data) {
+      if(data.getElementsByTagName) {
+        var a = data.getElementsByTagName("a");
         expect(a && a[0]).not.toBeUndefined();
         expect(a[0].textContent).toBe("1");
       }
       else {
-        expect(result.a).not.toBeUndefined();
-        expect(result.a[0]).toBe(1);
+        expect(data.a).not.toBeUndefined();
+        expect(data.a[0]).toBe(1);
       }
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(false).toBe(true);
       done();
     });
   });
@@ -197,17 +145,11 @@ describe("wadl-client", function() {
       parseJSON: true
     });
 
-    var p = client.test.json.fail.get()();
+    var res = client.test.json.fail.get()();
 
-    p.map(function(result) {
-      expect(result.a).toBe(1);
-      expect(result.b).toBe(2);
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error.a).toBe(1);
-      expect(error.b).toBe(2);
+    res.onError(function(data) {
+      expect(data.a).toBe(1);
+      expect(data.b).toBe(2);
       done();
     });
   });
@@ -218,13 +160,9 @@ describe("wadl-client", function() {
       parseJSON: true
     });
 
-    var p = client.test.json3.get()();
+    var res = client.test.json3.get()();
 
-    p.map(function() {
-      done();
-    });
-
-    p.mapError(function() {
+    res.onValue(function() {
       done();
     });
   });

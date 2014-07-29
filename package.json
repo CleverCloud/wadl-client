@@ -11,8 +11,8 @@
   "author": "Rodolphe Belouin <rodolphe.belouin@gmail.com>",
   "license": "BSD",
   "dependencies": {
+    "baconjs": "^0.7.19",
     "request": "^2.34.0",
-    "pacta": "^0.5.0",
     "xml2json": "^0.4.0"
   },
   "devDependencies": {
