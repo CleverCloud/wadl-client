@@ -7,7 +7,7 @@ var client = WadlClient.buildClient(resources, {
 
 describe("wadl-client", function() {
   it("should be able to download resources", function(done) {
-    var res = client.test.static.get();
+    var res = client.test.static.get().send();
 
     res.onValue(function(data) {
       expect(data).toBe("OK");
@@ -16,7 +16,7 @@ describe("wadl-client", function() {
   });
 
   it("should be able to download resources with query params", function(done) {
-    var res = client.test.query.get.withQuery({a: 12345})();
+    var res = client.test.query.get().withQuery({a: 12345}).send();
 
     res.onValue(function(data) {
       expect(data).toBe("a=12345");
@@ -25,7 +25,7 @@ describe("wadl-client", function() {
   });
 
   it("should be able to download resources with path params", function(done) {
-    var res = client.test.dynamic._.get.withParams(["12345"])();
+    var res = client.test.dynamic._.get().withParams(["12345"]).send();
 
     res.onValue(function(data) {
       expect(data).toBe("12345");
@@ -41,7 +41,7 @@ describe("wadl-client", function() {
       }
     });
 
-    var res = client.test.private.get();
+    var res = client.test.private.get().send();
 
     res.onValue(function(data) {
       expect(data).toBe("OK");
@@ -50,9 +50,9 @@ describe("wadl-client", function() {
   });
 
   it("should be able to download resources by giving specific header at sending time", function(done) {
-    var res = client.test.private.get.withHeaders({
+    var res = client.test.private.get().withHeaders({
         Authorization: "12345"
-    })();
+    }).send();
 
     res.onValue(function(data) {
       expect(data).toBe("OK");
@@ -61,7 +61,7 @@ describe("wadl-client", function() {
   });
 
   it("should be able to upload resources", function(done) {
-    var res = client.test.upload.post("12345");
+    var res = client.test.upload.post().send("12345");
 
     res.onValue(function(data) {
       expect(data).toBe("12345");
@@ -70,9 +70,9 @@ describe("wadl-client", function() {
   });
 
   it("should be able to upload resources with a specific header", function(done) {
-    var res = client.test.private.upload.put.withHeaders({
+    var res = client.test.private.upload.put().withHeaders({
       Authorization: "12345"
-    })("12345");
+    }).send("12345");
 
     res.onValue(function(data) {
       expect(data).toBe("12345");
@@ -81,7 +81,7 @@ describe("wadl-client", function() {
   });
 
   it("should be able to parse JSON resources if parse setting is set to true", function(done) {
-    var res = client.test.json.get.withParsing()();
+    var res = client.test.json.get().withParsing().send();
 
     res.onValue(function(data) {
       expect(data.a).toBe(1);
@@ -91,7 +91,7 @@ describe("wadl-client", function() {
   });
 
   it("should be able to parse JSON resources even if Content-Type header has a charset token", function(done) {
-    var res = client.test.json2.get.withParsing()();
+    var res = client.test.json2.get().withParsing().send();
 
     res.onValue(function(data) {
       expect(data.a).toBe(1);
@@ -101,7 +101,7 @@ describe("wadl-client", function() {
   });
 
   it("should be able to parse XML resources if parse setting is set to true", function(done) {
-    var res = client.test.xml.get.withParsing()();
+    var res = client.test.xml.get().withParsing().send();
 
     res.onValue(function(data) {
       if(data.getElementsByTagName) {
@@ -118,7 +118,7 @@ describe("wadl-client", function() {
   });
 
   it("should be able to parse JSON resources if parse setting is set to true, even on error", function(done) {
-    var res = client.test.json.fail.get.withParsing()();
+    var res = client.test.json.fail.get().withParsing().send();
 
     res.onError(function(data) {
       expect(data.a).toBe(1);
@@ -128,7 +128,7 @@ describe("wadl-client", function() {
   });
 
   it("must not fail when checking Content-Type header", function(done) {
-    var res = client.test.json3.get.withParsing()();
+    var res = client.test.json3.get().withParsing().send();
 
     res.onValue(function() {
       done();

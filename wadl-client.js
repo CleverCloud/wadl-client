@@ -116,9 +116,11 @@ var WadlClient = (function() {
 
   var prepareRequest = function(verb, pathTemplate, defaultSettings) {
     return function() {
-      var send = function(body) {
-        var host = send.host;
-        var params = Array.apply(Array, send.params);
+      var req = {};
+
+      req.send = function(body) {
+        var host = req.host;
+        var params = Array.apply(Array, req.params);
         var path = pathTemplate.replace(/{[^}]*}/g, function(matched) {
           var param = params.shift();
           return typeof param != "undefined" ? param : matched;
@@ -127,46 +129,46 @@ var WadlClient = (function() {
         return (request ? sendNodeRequest : sendBrowserRequest)({
           uri: host + path,
           method: verb.toUpperCase(),
-          headers: send.headers,
-          qs: send.query,
-          parse: send.parse,
+          headers: req.headers,
+          qs: req.query,
+          parse: req.parse,
           body: body
         });
       };
 
-      send.host = defaultSettings.host || "";
-      send.withHost = function(host) {
-        send.host = host;
-        return send;
+      req.host = defaultSettings.host || "";
+      req.withHost = function(host) {
+        req.host = host;
+        return req;
       };
 
-      send.params = [];
-      send.withParams = function(params) {
-        send.params = params;
-        return send;
+      req.params = [];
+      req.withParams = function(params) {
+        req.params = params;
+        return req;
       };
 
-      send.headers = defaultSettings.headers || {};
-      send.withHeaders = function(headers) {
+      req.headers = defaultSettings.headers || {};
+      req.withHeaders = function(headers) {
         for(var name in headers) {
-          send.headers[name] = headers[name];
+          req.headers[name] = headers[name];
         }
-        return send;
+        return req;
       };
 
-      send.query = {};
-      send.withQuery = function(query) {
-        send.query = query;
-        return send;
+      req.query = {};
+      req.withQuery = function(query) {
+        req.query = query;
+        return req;
       };
 
-      send.parse = defaultSettings.parse;
-      send.withParsing = function(parse) {
-        send.parse = typeof parse == "undefined" ? true : parse;
-        return send;
+      req.parse = defaultSettings.parse;
+      req.withParsing = function(parse) {
+        req.parse = typeof parse == "undefined" ? true : parse;
+        return req;
       };
 
-      return send;
+      return req;
     };
   };
 
@@ -197,11 +199,7 @@ var WadlClient = (function() {
         var methods = endpoints[path];
         for(var i = 0; i < methods.length; i++) {
           var method = methods[i];
-
-          Object.defineProperty(node, method.verb.toLowerCase(), {
-            get: prepareRequest(method.verb, path, settings || {}),
-            configurable: true
-          });
+          node[method.verb.toLowerCase()] = prepareRequest(method.verb, path, settings || {});
         }
       }
     }
