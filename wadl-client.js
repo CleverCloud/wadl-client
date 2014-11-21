@@ -31,6 +31,24 @@ var WadlClient = (function() {
     return false;
   };
 
+  var merge = function(obj1, obj2) {
+    var result = {};
+
+    for(var key1 in obj1) {
+      if(obj1.hasOwnProperty(key1)) {
+        result[key1] = obj1[key1];
+      }
+    }
+
+    for(var key2 in obj2) {
+      if(obj2.hasOwnProperty(key2)) {
+        result[key2] = obj2[key2];
+      }
+    }
+
+    return result;
+  };
+
   var nodeResponseHeaderHasValue = function(response, header, values) {
     return any(values, function(value) {
       return (response.headers[header] || "").indexOf(value) >= 0;
@@ -149,13 +167,13 @@ var WadlClient = (function() {
         return function(data) {
           var userOptions = typeof data == "object" && data;
           var qs = userOptions && userOptions.query;
+          var mergedHeaders = merge(headers, userOptions && userOptions.headers ? userOptions.headers : {});
           host = userOptions ? (userOptions.host || host) : host;
-          headers = userOptions ? (userOptions.headers || headers) : headers;
 
           return (request ? sendNodeRequest : sendBrowserRequest)({
             uri: host + path,
             method: verb.toUpperCase(),
-            headers: headers,
+            headers: mergedHeaders,
             qs: qs,
             body: userOptions ? userOptions.data : data,
             parseJSON: parseJSON,
