@@ -71,7 +71,11 @@ var WadlClient = (function() {
       }
       else if(response.statusCode >= 200 && response.statusCode < 300) {
         if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
-          result.resolve(JSON.parse(body));
+          try{
+            result.resolve(JSON.parse(body));
+          } catch(e){
+            result.reject(e);
+          }
         }
         else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
           result.resolve(parser.toJson(body, {
@@ -85,7 +89,11 @@ var WadlClient = (function() {
       }
       else {
         if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
-          result.reject(JSON.parse(body));
+          try{
+            result.reject(JSON.parse(body));
+          } catch(e){
+            result.reject(e);
+          }
         }
         else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
           result.reject(parser.toJson(body, {
@@ -114,7 +122,11 @@ var WadlClient = (function() {
       if(xhr.readyState == 4) {
         if(xhr.status >= 200 && xhr.status < 300) {
           if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
-            result.resolve(JSON.parse(xhr.responseText));
+            try{
+              result.resolve(JSON.parse(xhr.responseText));
+            } catch(e){
+              result.reject(e);
+            }
           }
           else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
             result.resolve(xhr.responseXML);
@@ -125,7 +137,11 @@ var WadlClient = (function() {
         }
         else {
           if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
-            result.reject(JSON.parse(xhr.responseText));
+            try{
+              result.reject(JSON.parse(xhr.responseText));
+            } catch(e){
+              result.reject(e);
+            }
           }
           else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
             result.reject(xhr.responseXML);

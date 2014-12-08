@@ -54,6 +54,11 @@ app.get("/test/json3", function(req, res) {
   res.send(null);
 });
 
+app.get("/test/json4", function(req, res){
+  res.setHeader("Content-Type", "application/json");
+  res.send("{'a':'1', 'b'");
+});
+
 app.get("/test/xml", function(req, res) {
   res.setHeader("Content-Type", "application/atom+xml");
   res.send("<a>1</a>");
@@ -66,6 +71,12 @@ app.get("/test/json/fail", function(req, res) {
     a: 1,
     b: 2
   }));
+});
+
+app.get("/test/json/fail2", function(req, res){
+  res.statusCode = 400;
+  res.setHeader("Content-Type", "application/json");
+  res.send("{'a':'1', 'b'");
 });
 
 var server;
