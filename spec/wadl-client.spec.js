@@ -228,4 +228,30 @@ describe("wadl-client", function() {
       done();
     });
   });
+
+  it("must not throw TypeError if resource is not JSON even if Content-Type header says so", function(done){
+    var client = WadlClient.buildClient(resources, {
+      host: 'http://localhost:3000',
+      parseJSON: true
+    });
+
+    var p = client.test.json4.get()();
+
+    p.mapError(function(error){
+      done();
+    });
+  });
+
+  it("must not throw TypeError if resource is not JSON even if Content-Type header says so and status is not 200", function(done){
+    var client = WadlClient.buildClient(resources, {
+      host: 'http://localhost:3000',
+      parseJSON: true
+    });
+
+    var p = client.test.json.fail2.get()();
+
+    p.mapError(function(error){
+      done();
+    });
+  });
 });

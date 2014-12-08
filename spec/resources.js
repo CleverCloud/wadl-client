@@ -50,6 +50,11 @@ var resources = {
     "name": "getJSONData3",
     "params": []
   }],
+  "/test/json4": [{
+    "verb": "GET",
+    "name": "getJSONData4",
+    "params": []
+  }],
   "/test/xml": [{
     "verb": "GET",
     "name": "getXMLData",
@@ -59,7 +64,12 @@ var resources = {
     "verb": "GET",
     "name": "getJSONFailData",
     "params": []
-  }]
+  }],
+  "/test/json/fail2": [{
+    "verb": "GET",
+    "name": "getJSONFailData2",
+    "params": []
+  }],
 };
 
 if(typeof module != "undefined" && module.exports) {
