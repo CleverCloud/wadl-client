@@ -1,6 +1,7 @@
 var http = require("http");
 var express = require("express");
 var textBody = require("body");
+var Bacon = require("baconjs");
 
 var app = express();
 
@@ -83,6 +84,27 @@ app.get("/test/timeout", function(req, res) {
   setTimeout(function() {
     res.send("6789");
   }, 5000);
+});
+
+var s_closed = {};
+
+app.post("/test/abort", function(req, res) {
+  textBody(req, function(err, body) {
+    s_closed[body] = Bacon.fromEventTarget(res, "close").map(true).toProperty(false);
+    s_closed[body].onValue();
+  });
+});
+
+app.get("/test/abort", function(req, res) {
+  if(s_closed[req.query.token]) {
+    s_closed[req.query.token].onValue(function(closed) {
+      res.send(closed.toString());
+    });
+  }
+  else {
+    res.statusCode = 404;
+    res.send("Not found.");
+  }
 });
 
 var server;

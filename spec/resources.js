@@ -74,6 +74,15 @@ var resources = {
     "verb": "GET",
     "name": "getTimeout",
     "params": []
+  }],
+  "/test/abort": [{
+    "verb": "GET",
+    "name": "testAbortion",
+    "params": []
+  },{
+    "verb": "POST",
+    "name": "testAbortion",
+    "params": []
   }]
 };
 

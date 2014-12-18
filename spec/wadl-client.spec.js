@@ -1,5 +1,6 @@
 var resources = resources || require("./resources.js");
 var WadlClient = WadlClient || require("../wadl-client.js");
+var Bacon = Bacon || require("baconjs");
 
 var client = WadlClient.buildClient(resources, {
   host: "http://localhost:3000"
@@ -156,6 +157,24 @@ describe("wadl-client", function() {
 
     res.onError(function(error) {
       expect(error.code).toBe("ETIMEDOUT");
+      done();
+    });
+  });
+
+  it("must be able to abort a request", function(done) {
+    var token = Date.now() + ":" + Math.random();
+
+    var res = client.test.abort.post().send(token);
+    var unsubscribe = res.onValue();
+
+    setTimeout(unsubscribe, 1000);
+
+    var s_closed = Bacon.later(3000).flatMapLatest(function() {
+      return client.test.abort.get().withQuery({token: token}).send();
+    });
+
+    s_closed.onValue(function(closed) {
+      expect(closed).toBe("true");
       done();
     });
   });

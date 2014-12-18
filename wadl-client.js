@@ -65,7 +65,7 @@ var WadlClient = (function() {
   /* Redefine request for node environment */
   var sendNodeRequest = function(options) {
     return B.fromBinder(function(sink) {
-      request(options, function(error, response, body) {
+      var req = request(options, function(error, response, body) {
         try {
           if(error) {
             Utils.send(sink, new B.Error(error));
@@ -81,7 +81,9 @@ var WadlClient = (function() {
         }
       });
 
-      return function(){};
+      return function() {
+        req.abort();
+      };
     });
   };
 
@@ -131,7 +133,10 @@ var WadlClient = (function() {
 
       xhr.send(options.body);
 
-      return function(){};
+      return function() {
+        xhr.reason = "abort";
+        xhr.abort();
+      };
     });
   };
 
@@ -147,7 +152,7 @@ var WadlClient = (function() {
           return typeof param != "undefined" ? param : matched;
         });
 
-        return (request ? sendNodeRequest : sendBrowserRequest)({
+        return req.sender({
           uri: host + path,
           method: verb.toUpperCase(),
           headers: req.headers,
@@ -156,6 +161,12 @@ var WadlClient = (function() {
           timeout: req.timeout,
           body: body
         });
+      };
+
+      req.sender = defaultSettings.sendRequest || (request ? sendNodeRequest : sendBrowserRequest);
+      req.withSender = function(sender) {
+        req.sender = sender;
+        return req;
       };
 
       req.host = defaultSettings.host || "";
