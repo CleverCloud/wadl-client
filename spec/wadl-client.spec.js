@@ -134,4 +134,20 @@ describe("wadl-client", function() {
       done();
     });
   });
+
+  it("must not throw TypeError if resource is not JSON even if Content-Type header says so", function(done){
+    var res = client.test.json4.get().withParsing().send();
+
+    res.onError(function(error){
+      done();
+    });
+  });
+
+  it("must not throw TypeError if resource is not JSON even if Content-Type header says so and status is not 200", function(done){
+    var res = client.test.json.fail2.get().withParsing().send();
+
+    res.onError(function(error){
+      done();
+    });
+  });
 });

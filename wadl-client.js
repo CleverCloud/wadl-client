@@ -66,14 +66,18 @@ var WadlClient = (function() {
   var sendNodeRequest = function(options) {
     return B.fromBinder(function(sink) {
       request(options, function(error, response, body) {
-        if(error) {
-          Utils.send(sink, new B.Error(error));
-        }
-        else if(response.statusCode >= 200 && response.statusCode < 300) {
-          Utils.send(sink, options.parse ? Utils.parseBody(response, body) : body);
-        }
-        else {
-          Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(response, body) : body));
+        try {
+          if(error) {
+            Utils.send(sink, new B.Error(error));
+          }
+          else if(response.statusCode >= 200 && response.statusCode < 300) {
+            Utils.send(sink, options.parse ? Utils.parseBody(response, body) : body);
+          }
+          else {
+            Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(response, body) : body));
+          }
+        } catch(e) {
+          Utils.send(sink, new B.Error(e));
         }
       });
 
@@ -91,11 +95,15 @@ var WadlClient = (function() {
 
       xhr.onreadystatechange = function() {
         if(xhr.readyState == 4) {
-          if(xhr.status >= 200 && xhr.status < 300) {
-            Utils.send(sink, options.parse ? Utils.parseBody(xhr) : xhr.responseText);
-          }
-          else {
-            Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(xhr) : xhr.responseText));
+          try {
+            if(xhr.status >= 200 && xhr.status < 300) {
+              Utils.send(sink, options.parse ? Utils.parseBody(xhr) : xhr.responseText);
+            }
+            else {
+              Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(xhr) : xhr.responseText));
+            }
+          } catch(e) {
+            Utils.send(sink, new B.Error(e));
           }
         }
       };
