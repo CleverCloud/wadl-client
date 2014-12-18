@@ -93,11 +93,24 @@ var WadlClient = (function() {
     return B.fromBinder(function(sink) {
       var xhr = new XMLHttpRequest();
 
+      if(typeof xhr.ontimeout != "undefined") {
+        xhr.timeout = options.timeout;
+      }
+      else if(options.timeout > 0) {
+        setTimeout(function() {
+          xhr.reason = "timeout";
+          xhr.abort();
+        }, options.timeout);
+      }
+
       xhr.onreadystatechange = function() {
         if(xhr.readyState == 4) {
           try {
             if(xhr.status >= 200 && xhr.status < 300) {
               Utils.send(sink, options.parse ? Utils.parseBody(xhr) : xhr.responseText);
+            }
+            else if(xhr.status === 0 || xhr.reason === "timeout") {
+              Utils.send(sink, new B.Error({code: "ETIMEDOUT"}));
             }
             else {
               Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(xhr) : xhr.responseText));
@@ -140,6 +153,7 @@ var WadlClient = (function() {
           headers: req.headers,
           qs: req.query,
           parse: req.parse,
+          timeout: req.timeout,
           body: body
         });
       };
@@ -173,6 +187,12 @@ var WadlClient = (function() {
       req.parse = defaultSettings.parse;
       req.withParsing = function(parse) {
         req.parse = typeof parse == "undefined" ? true : parse;
+        return req;
+      };
+
+      req.timeout = defaultSettings.timeout;
+      req.withTimeout = function(timeout) {
+        req.timeout = timeout;
         return req;
       };
 

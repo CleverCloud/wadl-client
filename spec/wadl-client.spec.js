@@ -150,4 +150,13 @@ describe("wadl-client", function() {
       done();
     });
   });
+
+  it("must send an error on timeout", function(done) {
+    var res = client.test.timeout.get().withTimeout(2000).send();
+
+    res.onError(function(error) {
+      expect(error.code).toBe("ETIMEDOUT");
+      done();
+    });
+  });
 });

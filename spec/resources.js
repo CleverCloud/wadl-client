@@ -70,6 +70,11 @@ var resources = {
     "name": "getJSONFailData2",
     "params": []
   }],
+  "/test/timeout": [{
+    "verb": "GET",
+    "name": "getTimeout",
+    "params": []
+  }]
 };
 
 if(typeof module != "undefined" && module.exports) {

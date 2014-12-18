@@ -79,6 +79,12 @@ app.get("/test/json/fail2", function(req, res){
   res.send("{'a':'1', 'b'");
 });
 
+app.get("/test/timeout", function(req, res) {
+  setTimeout(function() {
+    res.send("6789");
+  }, 5000);
+});
+
 var server;
 
 exports.start = function() {
