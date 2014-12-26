@@ -84,7 +84,7 @@ var WadlClient = (function() {
       return function() {
         req.abort();
       };
-    });
+    }).toProperty();
   };
 
   /* Redefine request for browser environment */
@@ -137,7 +137,7 @@ var WadlClient = (function() {
         xhr.reason = "abort";
         xhr.abort();
       };
-    });
+    }).toProperty();
   };
 
   var prepareRequest = function(verb, pathTemplate, defaultSettings) {

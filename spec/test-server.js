@@ -107,6 +107,10 @@ app.get("/test/abort", function(req, res) {
   }
 });
 
+app.get("/test/retain", function(req, res) {
+  res.send("abcdefg");
+});
+
 var server;
 
 exports.start = function() {

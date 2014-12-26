@@ -178,4 +178,20 @@ describe("wadl-client", function() {
       done();
     });
   });
+
+  it("must retain the response of a request", function(done) {
+    /* This test will timeout if ….send() does not return a Property */
+    var res = client.test.retain.get().send();
+
+    res.onValue(function() {
+      /* Do nothing */
+    });
+
+    setTimeout(function() {
+      res.onValue(function(value) {
+        expect(value).toBe("abcdefg");
+        done();
+      });
+    }, 2000);
+  });
 });

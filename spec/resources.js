@@ -83,6 +83,11 @@ var resources = {
     "verb": "POST",
     "name": "testAbortion",
     "params": []
+  }],
+  "/test/retain": [{
+    "verb": "GET",
+    "name": "retain",
+    "params": []
   }]
 };
 
