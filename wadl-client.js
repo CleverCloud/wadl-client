@@ -159,7 +159,7 @@ var WadlClient = (function() {
           qs: req.query,
           parse: req.parse,
           timeout: req.timeout,
-          body: body
+          body: typeof body === "object" ? JSON.stringify(body) : body
         });
       };
 

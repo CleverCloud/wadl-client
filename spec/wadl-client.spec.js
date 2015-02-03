@@ -52,7 +52,7 @@ describe("wadl-client", function() {
 
   it("should be able to download resources by giving specific header at sending time", function(done) {
     var res = client.test.private.get().withHeaders({
-        Authorization: "12345"
+      Authorization: "12345"
     }).send();
 
     res.onValue(function(data) {
@@ -151,6 +151,19 @@ describe("wadl-client", function() {
       done();
     });
   });
+
+  it("must not throw an 'Argument error, options.body' if body is an object", function(done){
+    var body = {
+      json: true
+    };
+    var res = client.test.json5.post().withParsing().send(body);
+
+    res.onValue(function(data){
+      expect(data.type).toBe("object");
+      done();
+    });
+  });
+
 
   it("must send an error on timeout", function(done) {
     var res = client.test.timeout.get().withTimeout(2000).send();
