@@ -1,6 +1,7 @@
 var http = require("http");
 var express = require("express");
 var textBody = require("body");
+var jsonBody = require("body/json");
 var Bacon = require("baconjs");
 
 var app = express();
@@ -58,6 +59,18 @@ app.get("/test/json3", function(req, res) {
 app.get("/test/json4", function(req, res){
   res.setHeader("Content-Type", "application/json");
   res.send("{'a':'1', 'b'");
+});
+
+app.post("/test/json5", function(req, res){
+  jsonBody(req, function(err, body){
+    if(err){
+      res.status(500).end();
+    } else{
+      res.json({
+        type: typeof body
+      });
+    }
+  });
 });
 
 app.get("/test/xml", function(req, res) {
