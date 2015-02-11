@@ -95,16 +95,6 @@ var WadlClient = (function() {
     return B.fromBinder(function(sink) {
       var xhr = new XMLHttpRequest();
 
-      if(typeof xhr.ontimeout != "undefined") {
-        xhr.timeout = options.timeout;
-      }
-      else if(options.timeout > 0) {
-        setTimeout(function() {
-          xhr.reason = "timeout";
-          xhr.abort();
-        }, options.timeout);
-      }
-
       xhr.onreadystatechange = function() {
         if(xhr.readyState == 4) {
           try {
@@ -124,6 +114,17 @@ var WadlClient = (function() {
       };
 
       xhr.open(options.method || "GET", options.uri + Utils.querystring(options.qs));
+
+      // xhr.timeout must be set after xhr.open() is called (IE throws an InvalidStateError)
+      if(typeof xhr.ontimeout != "undefined") {
+        xhr.timeout = options.timeout;
+      }
+      else if(options.timeout > 0) {
+        setTimeout(function() {
+          xhr.reason = "timeout";
+          xhr.abort();
+        }, options.timeout);
+      }
 
       for(var name in options.headers) {
         if(options.headers.hasOwnProperty(name)) {
