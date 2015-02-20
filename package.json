@@ -28,6 +28,6 @@
   },
   "scripts": {
     "bower-install": "bower install",
-    "test": "grunt"
+    "test": "bower install && grunt"
   }
 }
