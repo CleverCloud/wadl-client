@@ -111,6 +111,11 @@ app.get("/test/retain", function(req, res) {
   res.send("abcdefg");
 });
 
+app.get("/test/partial", function(req, res) {
+  res.setHeader("Content-Type", "application/json");
+  res.send("{\"a\": 1, \"b\":");
+});
+
 var server;
 
 exports.start = function() {

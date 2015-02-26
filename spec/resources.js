@@ -88,6 +88,11 @@ var resources = {
     "verb": "GET",
     "name": "retain",
     "params": []
+  }],
+  "/test/partial": [{
+    "verb": "GET",
+    "name": "partial-body",
+    "params": []
   }]
 };
 

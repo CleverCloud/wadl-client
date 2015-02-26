@@ -60,6 +60,12 @@ var WadlClient = (function() {
     sink(new B.End());
   };
 
+  Utils.logError = function(logger, message) {
+    if(logger && logger.error) {
+      logger.error(message);
+    }
+  };
+
   var WadlClient = {};
 
   /* Redefine request for node environment */
@@ -68,6 +74,7 @@ var WadlClient = (function() {
       var req = request(options, function(error, response, body) {
         try {
           if(error) {
+            Utils.logError(options.logger, error);
             Utils.send(sink, new B.Error(error));
           }
           else if(response.statusCode >= 200 && response.statusCode < 300) {
@@ -77,6 +84,7 @@ var WadlClient = (function() {
             Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(response, body) : body));
           }
         } catch(e) {
+          Utils.logError(options.logger, "An error occured while parsing: " + body);
           Utils.send(sink, new B.Error(e));
         }
       });
@@ -102,12 +110,14 @@ var WadlClient = (function() {
               Utils.send(sink, options.parse ? Utils.parseBody(xhr) : xhr.responseText);
             }
             else if(xhr.status === 0 || xhr.reason === "timeout") {
+              Utils.logError(options.logger, xhr.responseText);
               Utils.send(sink, new B.Error({code: "ETIMEDOUT"}));
             }
             else {
               Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(xhr) : xhr.responseText));
             }
           } catch(e) {
+            Utils.logError(options.logger, "An error occured while parsing: " + xhr.responseText);
             Utils.send(sink, new B.Error(e));
           }
         }
@@ -160,6 +170,7 @@ var WadlClient = (function() {
           qs: req.query,
           parse: req.parse,
           timeout: req.timeout,
+          logger: req.logger,
           body: body
         });
       };
@@ -205,6 +216,12 @@ var WadlClient = (function() {
       req.timeout = defaultSettings.timeout;
       req.withTimeout = function(timeout) {
         req.timeout = timeout;
+        return req;
+      };
+
+      req.logger = defaultSettings.logger;
+      req.withLogger = function(logger) {
+        req.logger = logger;
         return req;
       };
 

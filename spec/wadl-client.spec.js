@@ -194,4 +194,19 @@ describe("wadl-client", function() {
       });
     }, 2000);
   });
+
+  it("must forward the initial body to a logger when failing to parse it", function(done) {
+    var logger = {
+      error: function(message) {
+        expect(message).toBe("An error occured while parsing: {\"a\": 1, \"b\":");
+        done();
+      }
+    };
+
+    var res = client.test.partial.get().withParsing().withLogger(logger).send();
+
+    res.onValue(function() {
+      /* Do nothing */
+    });
+  });
 });
