@@ -156,23 +156,27 @@ var WadlClient = (function() {
       var req = {};
 
       req.send = function(body) {
-        var host = req.host;
-        var params = Array.apply(Array, req.params);
-        var path = pathTemplate.replace(/{[^}]*}/g, function(matched) {
-          var param = params.shift();
-          return typeof param != "undefined" ? param : matched;
-        });
+        var getSettings = function() {
+          var host = req.host;
+          var params = Array.apply(Array, req.params);
+          var path = pathTemplate.replace(/{[^}]*}/g, function(matched) {
+            var param = params.shift();
+            return typeof param != "undefined" ? param : matched;
+          });
 
-        return req.sender({
-          uri: host + path,
-          method: verb.toUpperCase(),
-          headers: req.headers,
-          qs: req.query,
-          parse: req.parse,
-          timeout: req.timeout,
-          logger: req.logger,
-          body: body
-        });
+          return {
+            uri: host + path,
+            method: verb.toUpperCase(),
+            headers: req.headers,
+            qs: req.query,
+            parse: req.parse,
+            timeout: req.timeout,
+            logger: req.logger,
+            body: body
+          };
+        };
+
+        return req.sender(defaultSettings && defaultSettings.hooks && typeof defaultSettings.hooks.beforeSend == "function" ? defaultSettings.hooks.beforeSend(getSettings()) : getSettings());
       };
 
       req.sender = defaultSettings.sendRequest || (request ? sendNodeRequest : sendBrowserRequest);

@@ -209,4 +209,23 @@ describe("wadl-client", function() {
       /* Do nothing */
     });
   });
+
+  it("must call the beforeSend hook, if it's defined", function(done) {
+    var client = WadlClient.buildClient(resources, {
+      host: "http://localhost:3000",
+      hooks: {
+        beforeSend: function(settings) {
+          settings.headers.Custom = settings.body;
+          return settings;
+        }
+      }
+    });
+
+    var res = client.test.beforeSend.get().send("megaplop");
+
+    res.onValue(function(body) {
+      expect(body).toBe("megaplop");
+      done();
+    });
+  });
 });

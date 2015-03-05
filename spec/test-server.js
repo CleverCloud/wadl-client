@@ -116,6 +116,10 @@ app.get("/test/partial", function(req, res) {
   res.send("{\"a\": 1, \"b\":");
 });
 
+app.get("/test/beforeSend", function(req, res) {
+  res.send(req.headers.custom);
+});
+
 var server;
 
 exports.start = function() {

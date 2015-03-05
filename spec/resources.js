@@ -93,6 +93,11 @@ var resources = {
     "verb": "GET",
     "name": "partial-body",
     "params": []
+  }],
+  "/test/beforeSend": [{
+    "verb": "GET",
+    "name": "before-send",
+    "params": []
   }]
 };
 
