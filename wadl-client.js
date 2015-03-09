@@ -158,11 +158,7 @@ var WadlClient = (function() {
       req.send = function(body) {
         var getSettings = function() {
           var host = req.host;
-          var params = Array.apply(Array, req.params);
-          var path = pathTemplate.replace(/{[^}]*}/g, function(matched) {
-            var param = params.shift();
-            return typeof param != "undefined" ? param : matched;
-          });
+          var path = req.getPath();
 
           return {
             uri: host + path,
@@ -177,6 +173,19 @@ var WadlClient = (function() {
         };
 
         return req.sender(defaultSettings && defaultSettings.hooks && typeof defaultSettings.hooks.beforeSend == "function" ? defaultSettings.hooks.beforeSend(getSettings()) : getSettings());
+      };
+
+      req.getVerb = function() {
+        return verb;
+      };
+
+      req.getPath = function() {
+        var params = Array.apply(Array, req.params);
+
+        return pathTemplate.replace(/{[^}]*}/g, function(matched) {
+          var param = params.shift();
+          return typeof param != "undefined" ? param : matched;
+        });
       };
 
       req.sender = defaultSettings.sendRequest || (request ? sendNodeRequest : sendBrowserRequest);

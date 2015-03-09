@@ -98,6 +98,16 @@ var resources = {
     "verb": "GET",
     "name": "before-send",
     "params": []
+  }],
+  "/test/path": [{
+    "verb": "GET",
+    "name": "get-path",
+    "params": []
+  }],
+  "/test/verb": [{
+    "verb": "GET",
+    "name": "get-verb",
+    "params": []
   }]
 };
 

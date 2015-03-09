@@ -228,4 +228,16 @@ describe("wadl-client", function() {
       done();
     });
   });
+
+  it("must expose the request path", function() {
+    var req = client.test.path.get();
+
+    expect(req.getPath()).toBe("/test/path");
+  });
+
+  it("must expose the request verb", function() {
+    var req = client.test.verb.get();
+
+    expect(req.getVerb()).toBe("GET");
+  });
 });
