@@ -161,7 +161,7 @@ var WadlClient = (function() {
       }
     }
 
-    xhr.send(options.body);
+    xhr.send(options.body || null);
 
     return result;
   };
