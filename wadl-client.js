@@ -66,6 +66,15 @@ var WadlClient = (function() {
     }
   };
 
+  Utils.copyObject = function(obj){
+    var ret = {};
+    for(var key in obj){
+      ret[key] = obj[key];
+    }
+
+    return ret;
+  };
+
   var WadlClient = {};
 
   /* Redefine request for node environment */
@@ -206,7 +215,7 @@ var WadlClient = (function() {
         return req;
       };
 
-      req.headers = defaultSettings.headers || {};
+      req.headers = Utils.copyObject(defaultSettings.headers || {});
       req.withHeaders = function(headers) {
         for(var name in headers) {
           req.headers[name] = headers[name];
