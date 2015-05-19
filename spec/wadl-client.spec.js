@@ -240,4 +240,21 @@ describe("wadl-client", function() {
 
     expect(req.getVerb()).toBe("GET");
   });
+
+  it("must not retain last used headers", function(done){
+    var s_auth = client.test.headers.get().withHeaders({Authorization: "12345"}).send();
+
+    s_auth.onValue(function(data){
+      expect(data).toBe("auth");
+    });
+
+    var s_notAuth = s_auth.flatMapLatest(function(){
+      return client.test.headers.get().send();
+    });
+
+    s_notAuth.onValue(function(data){
+      expect(data).toBe("not auth");
+      done();
+    });
+  });
 });

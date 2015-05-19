@@ -120,6 +120,10 @@ app.get("/test/beforeSend", function(req, res) {
   res.send(req.headers.custom);
 });
 
+app.get("/test/headers", function(req, res){
+  res.send(req.headers["authorization"] ? "auth" : "not auth").end();
+});
+
 var server;
 
 exports.start = function() {

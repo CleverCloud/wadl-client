@@ -108,6 +108,11 @@ var resources = {
     "verb": "GET",
     "name": "get-verb",
     "params": []
+  }],
+  "/test/headers": [{
+    "verb": "GET",
+    "name": "headers",
+    "params": []
   }]
 };
 
