@@ -1,12 +1,48 @@
 var WadlClient = (function() {
   /* Dependency aliases (to make WadlClient work on both node and browser environments) */
-  var P = typeof require == "function" && require("pacta") ? require("pacta") : Promise;
+  var B = typeof require == "function" && require("baconjs") ? require("baconjs") : Bacon;
   var request = typeof XMLHttpRequest != "undefined" ? null : require("request");
   var parser = typeof XMLHttpRequest != "undefined" ? null : require("xml2json");
 
-  var WadlClient = {};
+  /* Utils */
+  var Utils = {};
 
-  var querystring = function(params) {
+  Utils.any = function(values, f) {
+    for(var i in values) {
+      var result = f(values[i]);
+
+      if(result) {
+        return result;
+      }
+    }
+
+    return false;
+  };
+
+  Utils.elem = function(array, values) {
+    return Utils.any(values, function(value) {
+      return array.indexOf(value) >= 0;
+    });
+  };
+
+  Utils.parseBody = function(response, body) {
+    var contentType = typeof XMLHttpRequest != "undefined" ? response.getResponseHeader("Content-Type") : response.headers["content-type"];
+
+    if(Utils.elem(contentType || "", ["application/json"])) {
+      return JSON.parse(typeof response.responseText != "undefined" ? response.responseText : body);
+    }
+    else if(Utils.elem(contentType || "", ["text/xml", "application/rss+xml", "application/rdf+xml", "application/atom+xml"])) {
+      return response.responseXML ? response.responseXML : parser.toJson(body, {
+        object: true,
+        arrayNotation: true
+      });
+    }
+    else {
+      return response.responseText || body;
+    }
+  };
+
+  Utils.querystring = function(params) {
     var pairs = [];
     params = params || {};
 
@@ -19,95 +55,53 @@ var WadlClient = (function() {
     return pairs.length === 0 ? "" : "?" + pairs.join("&");
   };
 
-  var any = function(values, f) {
-    for(var i in values) {
-      var result = f(values[i]);
+  Utils.send = function(sink, data) {
+    sink(data);
+    sink(new B.End());
+  };
 
-      if(result) {
-        return result;
-      }
+  Utils.logError = function(logger, message) {
+    if(logger && logger.error) {
+      logger.error(message);
+    }
+  };
+
+  Utils.copyObject = function(obj){
+    var ret = {};
+    for(var key in obj){
+      ret[key] = obj[key];
     }
 
-    return false;
+    return ret;
   };
 
-  var merge = function(obj1, obj2) {
-    var result = {};
-
-    for(var key1 in obj1) {
-      if(obj1.hasOwnProperty(key1)) {
-        result[key1] = obj1[key1];
-      }
-    }
-
-    for(var key2 in obj2) {
-      if(obj2.hasOwnProperty(key2)) {
-        result[key2] = obj2[key2];
-      }
-    }
-
-    return result;
-  };
-
-  var nodeResponseHeaderHasValue = function(response, header, values) {
-    return any(values, function(value) {
-      return (response.headers[header] || "").indexOf(value) >= 0;
-    });
-  };
-
-  var browserResponseHeaderHasValue = function(response, header, values) {
-    return any(values, function(value) {
-      return (response.getResponseHeader(header) || "").indexOf(value) >= 0;
-    });
-  };
+  var WadlClient = {};
 
   /* Redefine request for node environment */
   var sendNodeRequest = function(options) {
-    var result = new P();
-
-    request(options, function(error, response, body) {
-      if(error) {
-        result.reject(error);
-      }
-      else if(response.statusCode >= 200 && response.statusCode < 300) {
-        if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
-          try{
-            result.resolve(JSON.parse(body));
-          } catch(e){
-            result.reject(e);
+    return B.fromBinder(function(sink) {
+      var req = request(options, function(error, response, body) {
+        try {
+          if(error) {
+            Utils.logError(options.logger, error);
+            Utils.send(sink, new B.Error(error));
           }
-        }
-        else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-          result.resolve(parser.toJson(body, {
-            object: true,
-            arrayNotation: true
-          }));
-        }
-        else {
-          result.resolve(body);
-        }
-      }
-      else {
-        if(options.parseJSON && nodeResponseHeaderHasValue(response, "content-type", ["application/json"])) {
-          try{
-            result.reject(JSON.parse(body));
-          } catch(e){
-            result.reject(e);
+          else if(response.statusCode >= 200 && response.statusCode < 300) {
+            Utils.send(sink, options.parse ? Utils.parseBody(response, body) : body);
           }
+          else {
+            Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(response, body) : body));
+          }
+        } catch(e) {
+          Utils.logError(options.logger, "An error occured while parsing: " + body);
+          Utils.send(sink, new B.Error(e));
         }
-        else if(options.parseXML && nodeResponseHeaderHasValue(response, "content-type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-          result.reject(parser.toJson(body, {
-            object: true,
-            arrayNotation: true
-          }));
-        }
-        else {
-          result.reject(body);
-        }
-      }
-    });
+      });
 
-    return result;
+      return function() {
+        req.abort();
+      };
+    }).toProperty();
   };
 
   /* Redefine request for browser environment */
@@ -115,88 +109,145 @@ var WadlClient = (function() {
     options = options || {};
     options.headers = options.headers || {};
 
-    var result = new P();
-    var xhr = new XMLHttpRequest();
+    return B.fromBinder(function(sink) {
+      var xhr = new XMLHttpRequest();
 
-    xhr.onreadystatechange = function() {
-      if(xhr.readyState == 4) {
-        if(xhr.status >= 200 && xhr.status < 300) {
-          if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
-            try{
-              result.resolve(JSON.parse(xhr.responseText));
-            } catch(e){
-              result.reject(e);
+      xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4) {
+          try {
+            if(xhr.status >= 200 && xhr.status < 300) {
+              Utils.send(sink, options.parse ? Utils.parseBody(xhr) : xhr.responseText);
             }
-          }
-          else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-            result.resolve(xhr.responseXML);
-          }
-          else {
-            result.resolve(xhr.responseText);
+            else if(xhr.status === 0 || xhr.reason === "timeout") {
+              Utils.logError(options.logger, xhr.responseText);
+              Utils.send(sink, new B.Error({code: "ETIMEDOUT"}));
+            }
+            else {
+              Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(xhr) : xhr.responseText));
+            }
+          } catch(e) {
+            Utils.logError(options.logger, "An error occured while parsing: " + xhr.responseText);
+            Utils.send(sink, new B.Error(e));
           }
         }
-        else {
-          if(options.parseJSON && browserResponseHeaderHasValue(xhr, "Content-Type", ["application/json"])) {
-            try{
-              result.reject(JSON.parse(xhr.responseText));
-            } catch(e){
-              result.reject(e);
-            }
-          }
-          else if(options.parseXML && browserResponseHeaderHasValue(xhr, "Content-Type", ["text/xml", "application/rss+xml", "application/rss+xml", "application/atom+xml"])) {
-            result.reject(xhr.responseXML);
-          }
-          else {
-            result.reject(xhr.responseText);
-          }
+      };
+
+      xhr.open(options.method || "GET", options.uri + Utils.querystring(options.qs));
+
+      // xhr.timeout must be set after xhr.open() is called (IE throws an InvalidStateError)
+      if(typeof xhr.ontimeout != "undefined") {
+        xhr.timeout = options.timeout;
+      }
+      else if(options.timeout > 0) {
+        setTimeout(function() {
+          xhr.reason = "timeout";
+          xhr.abort();
+        }, options.timeout);
+      }
+
+      for(var name in options.headers) {
+        if(options.headers.hasOwnProperty(name)) {
+          xhr.setRequestHeader(name, options.headers[name]);
         }
       }
-    };
 
-    xhr.open(options.method || "GET", options.uri + querystring(options.qs));
+      xhr.send(options.body || null);
 
-    for(var name in options.headers) {
-      if(options.headers.hasOwnProperty(name)) {
-        xhr.setRequestHeader(name, options.headers[name]);
-      }
-    }
-
-    xhr.send(options.body || null);
-
-    return result;
+      return function() {
+        xhr.reason = "abort";
+        xhr.abort();
+      };
+    }).toProperty();
   };
 
-  var sendRequest = function(options) {
-    var host = options.host || "";
-    var headers = options.headers || {};
-    var parseJSON = options.parseJSON || false;
-    var parseXML = options.parseXML || false;
+  var prepareRequest = function(verb, pathTemplate, defaultSettings) {
+    return function() {
+      var req = {};
 
-    return function(verb, path_template) {
-      return function() {
-        var params = Array.apply(Array, arguments);
-        var path = path_template.replace(/{[^}]*}/g, function(matched) {
+      req.send = function(body) {
+        var getSettings = function() {
+          var host = req.host;
+          var path = req.getPath();
+
+          return {
+            uri: host + path,
+            method: verb.toUpperCase(),
+            headers: req.headers,
+            qs: req.query,
+            parse: req.parse,
+            timeout: req.timeout,
+            logger: req.logger,
+            body: body
+          };
+        };
+
+        return req.sender(defaultSettings && defaultSettings.hooks && typeof defaultSettings.hooks.beforeSend == "function" ? defaultSettings.hooks.beforeSend(getSettings()) : getSettings());
+      };
+
+      req.getVerb = function() {
+        return verb;
+      };
+
+      req.getPath = function() {
+        var params = Array.apply(Array, req.params);
+
+        return pathTemplate.replace(/{[^}]*}/g, function(matched) {
           var param = params.shift();
           return typeof param != "undefined" ? param : matched;
         });
-
-        return function(data) {
-          var userOptions = typeof data == "object" && data;
-          var qs = userOptions && userOptions.query;
-          var mergedHeaders = merge(headers, userOptions && userOptions.headers ? userOptions.headers : {});
-          host = userOptions ? (userOptions.host || host) : host;
-
-          return (request ? sendNodeRequest : sendBrowserRequest)({
-            uri: host + path,
-            method: verb.toUpperCase(),
-            headers: mergedHeaders,
-            qs: qs,
-            body: userOptions ? userOptions.data : data,
-            parseJSON: parseJSON,
-            parseXML: parseXML
-          });
-        };
       };
+
+      req.sender = defaultSettings.sendRequest || (request ? sendNodeRequest : sendBrowserRequest);
+      req.withSender = function(sender) {
+        req.sender = sender;
+        return req;
+      };
+
+      req.host = defaultSettings.host || "";
+      req.withHost = function(host) {
+        req.host = host;
+        return req;
+      };
+
+      req.params = [];
+      req.withParams = function(params) {
+        req.params = params;
+        return req;
+      };
+
+      req.headers = Utils.copyObject(defaultSettings.headers || {});
+      req.withHeaders = function(headers) {
+        for(var name in headers) {
+          req.headers[name] = headers[name];
+        }
+        return req;
+      };
+
+      req.query = {};
+      req.withQuery = function(query) {
+        req.query = query;
+        return req;
+      };
+
+      req.parse = defaultSettings.parse;
+      req.withParsing = function(parse) {
+        req.parse = typeof parse == "undefined" ? true : parse;
+        return req;
+      };
+
+      req.timeout = defaultSettings.timeout;
+      req.withTimeout = function(timeout) {
+        req.timeout = timeout;
+        return req;
+      };
+
+      req.logger = defaultSettings.logger;
+      req.withLogger = function(logger) {
+        req.logger = logger;
+        return req;
+      };
+
+      return req;
     };
   };
 
@@ -227,7 +278,7 @@ var WadlClient = (function() {
         var methods = endpoints[path];
         for(var i = 0; i < methods.length; i++) {
           var method = methods[i];
-          node[method.verb == "DELETE" ? "remove" : method.verb.toLowerCase()] = sendRequest(settings)(method.verb, path);
+          node[method.verb.toLowerCase()] = prepareRequest(method.verb, path, settings || {});
         }
       }
     }

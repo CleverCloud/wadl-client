@@ -1,6 +1,7 @@
 var http = require("http");
 var express = require("express");
 var textBody = require("body");
+var Bacon = require("baconjs");
 
 var app = express();
 
@@ -77,6 +78,50 @@ app.get("/test/json/fail2", function(req, res){
   res.statusCode = 400;
   res.setHeader("Content-Type", "application/json");
   res.send("{'a':'1', 'b'");
+});
+
+app.get("/test/timeout", function(req, res) {
+  setTimeout(function() {
+    res.send("6789");
+  }, 5000);
+});
+
+var s_closed = {};
+
+app.post("/test/abort", function(req, res) {
+  textBody(req, function(err, body) {
+    s_closed[body] = Bacon.fromEventTarget(res, "close").map(true).toProperty(false);
+    s_closed[body].onValue();
+  });
+});
+
+app.get("/test/abort", function(req, res) {
+  if(s_closed[req.query.token]) {
+    s_closed[req.query.token].onValue(function(closed) {
+      res.send(closed.toString());
+    });
+  }
+  else {
+    res.statusCode = 404;
+    res.send("Not found.");
+  }
+});
+
+app.get("/test/retain", function(req, res) {
+  res.send("abcdefg");
+});
+
+app.get("/test/partial", function(req, res) {
+  res.setHeader("Content-Type", "application/json");
+  res.send("{\"a\": 1, \"b\":");
+});
+
+app.get("/test/beforeSend", function(req, res) {
+  res.send(req.headers.custom);
+});
+
+app.get("/test/headers", function(req, res){
+  res.send(req.headers["authorization"] ? "auth" : "not auth").end();
 });
 
 var server;

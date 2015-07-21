@@ -70,6 +70,50 @@ var resources = {
     "name": "getJSONFailData2",
     "params": []
   }],
+  "/test/timeout": [{
+    "verb": "GET",
+    "name": "getTimeout",
+    "params": []
+  }],
+  "/test/abort": [{
+    "verb": "GET",
+    "name": "testAbortion",
+    "params": []
+  },{
+    "verb": "POST",
+    "name": "testAbortion",
+    "params": []
+  }],
+  "/test/retain": [{
+    "verb": "GET",
+    "name": "retain",
+    "params": []
+  }],
+  "/test/partial": [{
+    "verb": "GET",
+    "name": "partial-body",
+    "params": []
+  }],
+  "/test/beforeSend": [{
+    "verb": "GET",
+    "name": "before-send",
+    "params": []
+  }],
+  "/test/path": [{
+    "verb": "GET",
+    "name": "get-path",
+    "params": []
+  }],
+  "/test/verb": [{
+    "verb": "GET",
+    "name": "get-verb",
+    "params": []
+  }],
+  "/test/headers": [{
+    "verb": "GET",
+    "name": "headers",
+    "params": []
+  }]
 };
 
 if(typeof module != "undefined" && module.exports) {

@@ -1,5 +1,6 @@
 var resources = resources || require("./resources.js");
 var WadlClient = WadlClient || require("../wadl-client.js");
+var Bacon = Bacon || require("baconjs");
 
 var client = WadlClient.buildClient(resources, {
   host: "http://localhost:3000"
@@ -7,45 +8,28 @@ var client = WadlClient.buildClient(resources, {
 
 describe("wadl-client", function() {
   it("should be able to download resources", function(done) {
-    var p = client.test.static.get()();
+    var res = client.test.static.get().send();
 
-    p.map(function(result) {
-      expect(result).toBe("OK");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("OK"); // make test fail if any error
+    res.onValue(function(data) {
+      expect(data).toBe("OK");
       done();
     });
   });
 
   it("should be able to download resources with query params", function(done) {
-    var p = client.test.query.get()({
-      query: {a: 12345}
-    });
+    var res = client.test.query.get().withQuery({a: 12345}).send();
 
-    p.map(function(result) {
-      expect(result).toBe("a=12345");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("a=12345"); // make test fail if any error
+    res.onValue(function(data) {
+      expect(data).toBe("a=12345");
       done();
     });
   });
 
   it("should be able to download resources with path params", function(done) {
-    var p = client.test.dynamic._.get("12345")();
+    var res = client.test.dynamic._.get().withParams(["12345"]).send();
 
-    p.map(function(result) {
-      expect(result).toBe("12345");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("12345"); // make test fail if any error
+    res.onValue(function(data) {
+      expect(data).toBe("12345");
       done();
     });
   });
@@ -58,199 +42,218 @@ describe("wadl-client", function() {
       }
     });
 
-    var p = client.test.private.get()();
+    var res = client.test.private.get().send();
 
-    p.map(function(result) {
-      expect(result).toBe("OK");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("OK");
+    res.onValue(function(data) {
+      expect(data).toBe("OK");
       done();
     });
   });
 
   it("should be able to download resources by giving specific header at sending time", function(done) {
-    var p = client.test.private.get()({
-      headers: {
+    var res = client.test.private.get().withHeaders({
         Authorization: "12345"
-      }
-    });
+    }).send();
 
-    p.map(function(result) {
-      expect(result).toBe("OK");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("OK");
+    res.onValue(function(data) {
+      expect(data).toBe("OK");
       done();
     });
   });
 
   it("should be able to upload resources", function(done) {
-    var p = client.test.upload.post()("12345");
+    var res = client.test.upload.post().send("12345");
 
-    p.map(function(result) {
-      expect(result).toBe("12345");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("12345");
+    res.onValue(function(data) {
+      expect(data).toBe("12345");
       done();
     });
   });
 
   it("should be able to upload resources with a specific header", function(done) {
-    var p = client.test.private.upload.put()({
-      data: "12345",
-      headers: {
-        Authorization: "12345"
-      }
-    });
+    var res = client.test.private.upload.put().withHeaders({
+      Authorization: "12345"
+    }).send("12345");
 
-    p.map(function(result) {
-      expect(result).toBe("12345");
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error).toBe("12345");
+    res.onValue(function(data) {
+      expect(data).toBe("12345");
       done();
     });
   });
 
-  it("should be able to parse JSON resources if parseJSON setting is set to true", function(done) {
-    var client = WadlClient.buildClient(resources, {
-      host: "http://localhost:3000",
-      parseJSON: true
-    });
+  it("should be able to parse JSON resources if parse setting is set to true", function(done) {
+    var res = client.test.json.get().withParsing().send();
 
-    var p = client.test.json.get()();
-
-    p.map(function(result) {
-      expect(result.a).toBe(1);
-      expect(result.b).toBe(2);
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error.a).toBe(1);
-      expect(error.b).toBe(2);
+    res.onValue(function(data) {
+      expect(data.a).toBe(1);
+      expect(data.b).toBe(2);
       done();
     });
   });
 
   it("should be able to parse JSON resources even if Content-Type header has a charset token", function(done) {
-    var client = WadlClient.buildClient(resources, {
-      host: "http://localhost:3000",
-      parseJSON: true
-    });
+    var res = client.test.json2.get().withParsing().send();
 
-    var p = client.test.json2.get()();
-
-    p.map(function(result) {
-      expect(result.a).toBe(1);
-      expect(result.b).toBe(2);
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error.a).toBe(1);
-      expect(error.b).toBe(2);
+    res.onValue(function(data) {
+      expect(data.a).toBe(1);
+      expect(data.b).toBe(2);
       done();
     });
   });
 
-  it("should be able to parse XML resources if parseXML setting is set to true", function(done) {
-    var client = WadlClient.buildClient(resources, {
-      host: "http://localhost:3000",
-      parseXML: true
-    });
+  it("should be able to parse XML resources if parse setting is set to true", function(done) {
+    var res = client.test.xml.get().withParsing().send();
 
-    var p = client.test.xml.get()();
-
-    p.map(function(result) {
-      if(result.getElementsByTagName) {
-        var a = result.getElementsByTagName("a");
+    res.onValue(function(data) {
+      if(data.getElementsByTagName) {
+        var a = data.getElementsByTagName("a");
         expect(a && a[0]).not.toBeUndefined();
         expect(a[0].textContent).toBe("1");
       }
       else {
-        expect(result.a).not.toBeUndefined();
-        expect(result.a[0]).toBe(1);
+        expect(data.a).not.toBeUndefined();
+        expect(data.a[0]).toBe(1);
       }
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(false).toBe(true);
       done();
     });
   });
 
-  it("should be able to parse JSON resources if parseJSON setting is set to true, even on error", function(done) {
-    var client = WadlClient.buildClient(resources, {
-      host: "http://localhost:3000",
-      parseJSON: true
-    });
+  it("should be able to parse JSON resources if parse setting is set to true, even on error", function(done) {
+    var res = client.test.json.fail.get().withParsing().send();
 
-    var p = client.test.json.fail.get()();
-
-    p.map(function(result) {
-      expect(result.a).toBe(1);
-      expect(result.b).toBe(2);
-      done();
-    });
-
-    p.mapError(function(error) {
-      expect(error.a).toBe(1);
-      expect(error.b).toBe(2);
+    res.onError(function(data) {
+      expect(data.a).toBe(1);
+      expect(data.b).toBe(2);
       done();
     });
   });
 
   it("must not fail when checking Content-Type header", function(done) {
-    var client = WadlClient.buildClient(resources, {
-      host: "http://localhost:3000",
-      parseJSON: true
-    });
+    var res = client.test.json3.get().withParsing().send();
 
-    var p = client.test.json3.get()();
-
-    p.map(function() {
-      done();
-    });
-
-    p.mapError(function() {
+    res.onValue(function() {
       done();
     });
   });
 
   it("must not throw TypeError if resource is not JSON even if Content-Type header says so", function(done){
-    var client = WadlClient.buildClient(resources, {
-      host: 'http://localhost:3000',
-      parseJSON: true
-    });
+    var res = client.test.json4.get().withParsing().send();
 
-    var p = client.test.json4.get()();
-
-    p.mapError(function(error){
+    res.onError(function(error){
       done();
     });
   });
 
   it("must not throw TypeError if resource is not JSON even if Content-Type header says so and status is not 200", function(done){
-    var client = WadlClient.buildClient(resources, {
-      host: 'http://localhost:3000',
-      parseJSON: true
+    var res = client.test.json.fail2.get().withParsing().send();
+
+    res.onError(function(error){
+      done();
+    });
+  });
+
+  it("must send an error on timeout", function(done) {
+    var res = client.test.timeout.get().withTimeout(2000).send();
+
+    res.onError(function(error) {
+      expect(error.code).toBe("ETIMEDOUT");
+      done();
+    });
+  });
+
+  it("must be able to abort a request", function(done) {
+    var token = Date.now() + ":" + Math.random();
+
+    var res = client.test.abort.post().send(token);
+    var unsubscribe = res.onValue();
+
+    setTimeout(unsubscribe, 1000);
+
+    var s_closed = Bacon.later(3000).flatMapLatest(function() {
+      return client.test.abort.get().withQuery({token: token}).send();
     });
 
-    var p = client.test.json.fail2.get()();
+    s_closed.onValue(function(closed) {
+      expect(closed).toBe("true");
+      done();
+    });
+  });
 
-    p.mapError(function(error){
+  it("must retain the response of a request", function(done) {
+    /* This test will timeout if ….send() does not return a Property */
+    var res = client.test.retain.get().send();
+
+    res.onValue(function() {
+      /* Do nothing */
+    });
+
+    setTimeout(function() {
+      res.onValue(function(value) {
+        expect(value).toBe("abcdefg");
+        done();
+      });
+    }, 2000);
+  });
+
+  it("must forward the initial body to a logger when failing to parse it", function(done) {
+    var logger = {
+      error: function(message) {
+        expect(message).toBe("An error occured while parsing: {\"a\": 1, \"b\":");
+        done();
+      }
+    };
+
+    var res = client.test.partial.get().withParsing().withLogger(logger).send();
+
+    res.onValue(function() {
+      /* Do nothing */
+    });
+  });
+
+  it("must call the beforeSend hook, if it's defined", function(done) {
+    var client = WadlClient.buildClient(resources, {
+      host: "http://localhost:3000",
+      hooks: {
+        beforeSend: function(settings) {
+          settings.headers.Custom = settings.body;
+          return settings;
+        }
+      }
+    });
+
+    var res = client.test.beforeSend.get().send("megaplop");
+
+    res.onValue(function(body) {
+      expect(body).toBe("megaplop");
+      done();
+    });
+  });
+
+  it("must expose the request path", function() {
+    var req = client.test.path.get();
+
+    expect(req.getPath()).toBe("/test/path");
+  });
+
+  it("must expose the request verb", function() {
+    var req = client.test.verb.get();
+
+    expect(req.getVerb()).toBe("GET");
+  });
+
+  it("must not retain last used headers", function(done){
+    var s_auth = client.test.headers.get().withHeaders({Authorization: "12345"}).send();
+
+    s_auth.onValue(function(data){
+      expect(data).toBe("auth");
+    });
+
+    var s_notAuth = s_auth.flatMapLatest(function(){
+      return client.test.headers.get().send();
+    });
+
+    s_notAuth.onValue(function(data){
+      expect(data).toBe("not auth");
       done();
     });
   });
