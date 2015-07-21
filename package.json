@@ -9,7 +9,7 @@
     "api"
   ],
   "author": "Rodolphe Belouin <rodolphe.belouin@gmail.com>",
-  "license": "BSD",
+  "license": "BSD-3-Clause",
   "dependencies": {
     "baconjs": "^0.7.70",
     "request": "^2.60.0",
