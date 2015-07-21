@@ -1,8 +1,8 @@
-var resources = resources || require("./resources.js");
+var swagger = swagger || require("./swagger.js");
 var WadlClient = WadlClient || require("../wadl-client.js");
 var Bacon = Bacon || require("baconjs");
 
-var client = WadlClient.buildClient(resources, {
+var client = WadlClient.buildClient(swagger, {
   host: "http://localhost:3000"
 });
 
@@ -35,7 +35,7 @@ describe("wadl-client", function() {
   });
 
   it("should be able to download resources by giving specific header at building time", function(done) {
-    var client = WadlClient.buildClient(resources, {
+    var client = WadlClient.buildClient(swagger, {
       host: "http://localhost:3000",
       headers: {
         Authorization: "12345"
@@ -211,7 +211,7 @@ describe("wadl-client", function() {
   });
 
   it("must call the beforeSend hook, if it's defined", function(done) {
-    var client = WadlClient.buildClient(resources, {
+    var client = WadlClient.buildClient(swagger, {
       host: "http://localhost:3000",
       hooks: {
         beforeSend: function(settings) {

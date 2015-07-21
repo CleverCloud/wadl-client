@@ -263,8 +263,9 @@ var WadlClient = (function() {
     }
   };
 
-  WadlClient.buildClient = function(endpoints, settings) {
+  WadlClient.buildClient = function(swagger, settings) {
     var client = {};
+    var endpoints = swagger.paths;
 
     for(var path in endpoints) {
       if(endpoints.hasOwnProperty(path)) {
@@ -276,9 +277,9 @@ var WadlClient = (function() {
         var node = buildNodeFromSegments(client, segments);
 
         var methods = endpoints[path];
-        for(var i = 0; i < methods.length; i++) {
-          var method = methods[i];
-          node[method.verb.toLowerCase()] = prepareRequest(method.verb, path, settings || {});
+        for(var verb in methods) {
+          var method = methods[verb];
+          node[verb.toLowerCase()] = prepareRequest(verb.toUpperCase(), path, settings || {});
         }
       }
     }

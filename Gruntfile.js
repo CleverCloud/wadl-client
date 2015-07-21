@@ -26,7 +26,7 @@ module.exports = function(grunt) {
         }
       },
       default: {
-        src: ["spec/browser-dependencies.js", "spec/resources.js", "wadl-client.js"],
+        src: ["spec/browser-dependencies.js", "spec/swagger.js", "wadl-client.js"],
         options: {
           host: "http://localhost:3000/",
           outfile: "index.html",
