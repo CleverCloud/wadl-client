@@ -66,6 +66,12 @@ var WadlClient = (function() {
     }
   };
 
+  Utils.logDebug = function(logger, message) {
+    if(logger && logger.debug) {
+      logger.debug(message);
+    }
+  };
+
   Utils.copyObject = function(obj){
     var ret = {};
     for(var key in obj){
@@ -181,6 +187,7 @@ var WadlClient = (function() {
           };
         };
 
+        Utils.logDebug(defaultSettings.logger, verb + " " + req.host + req.getPath());
         return req.sender(defaultSettings && defaultSettings.hooks && typeof defaultSettings.hooks.beforeSend == "function" ? defaultSettings.hooks.beforeSend(getSettings()) : getSettings());
       };
 
