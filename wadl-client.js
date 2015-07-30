@@ -86,6 +86,13 @@ var WadlClient = (function() {
   /* Redefine request for node environment */
   var sendNodeRequest = function(options) {
     return B.fromBinder(function(sink) {
+      // Node 0.12.x truncates results on https requests if keepAlive is not
+      // explicitely enabled. See https://github.com/joyent/node/issues/25749
+      if(options.uri.indexOf("https://") === 0) {
+        options.agent = new (require("https").Agent)({
+          keepAlive: true
+        });
+      }
       var req = request(options, function(error, response, body) {
         try {
           if(error) {
