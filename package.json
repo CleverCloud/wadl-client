@@ -1,6 +1,6 @@
 {
   "name": "wadl-client",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Generate a Javascript client for a web API providing a WADL description",
   "main": "wadl-client.js",
   "keywords": [
