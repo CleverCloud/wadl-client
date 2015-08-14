@@ -215,6 +215,15 @@ var swagger = {
           }
         }
       }
+    },
+    "/test/catch": {
+      "get": {
+        "responses": {
+          "default": {
+            "description": "catch"
+          }
+        }
+      }
     }
   }
 };

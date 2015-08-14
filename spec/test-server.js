@@ -124,6 +124,10 @@ app.get("/test/headers", function(req, res){
   res.send(req.headers["authorization"] ? "auth" : "not auth").end();
 });
 
+app.get("/test/catch", function(req, res) {
+  res.send();
+});
+
 var server;
 
 exports.start = function() {

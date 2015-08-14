@@ -257,4 +257,27 @@ describe("wadl-client", function() {
       done();
     });
   });
+
+  it("must not catch an error that is thrown in an onValue callback", function(done) {
+    if(typeof window != "undefined") {
+      console.log("This test is not compliant with browser environments");
+      done();
+    }
+    else {
+      var req = client.test.catch.get().send();
+
+      var d = require("domain").create();
+
+      d.on("error", function(error) {
+        expect(error.message).toBe("UNCAUGHT ERROR");
+        done();
+      });
+
+      d.run(function() {
+        req.onValue(function() {
+          throw new Error("UNCAUGHT ERROR");
+        });
+      });
+    }
+  });
 });
