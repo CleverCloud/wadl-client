@@ -81,21 +81,24 @@ var WadlClient = (function() {
   var sendNodeRequest = function(options) {
     return B.fromBinder(function(sink) {
       var req = request(options, function(error, response, body) {
+        var parseResult;
         try {
           if(error) {
             Utils.logError(options.logger, error);
-            Utils.send(sink, new B.Error(error));
+            parseResult = new B.Error(error);
           }
           else if(response.statusCode >= 200 && response.statusCode < 300) {
-            Utils.send(sink, options.parse ? Utils.parseBody(response, body) : body);
+            parseResult = options.parse ? Utils.parseBody(response, body) : body;
           }
           else {
-            Utils.send(sink, new B.Error(options.parse ? Utils.parseBody(response, body) : body));
+            parseResult = new B.Error(options.parse ? Utils.parseBody(response, body) : body);
           }
         } catch(e) {
           Utils.logError(options.logger, "An error occured while parsing: " + body);
-          Utils.send(sink, new B.Error(e));
+          parseResult = new B.Error(e);
         }
+
+        Utils.send(sink, parseResult);
       });
 
       return function() {
