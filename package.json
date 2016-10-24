@@ -12,8 +12,7 @@
   "license": "BSD-3-Clause",
   "dependencies": {
     "baconjs": "^0.7.70",
-    "request": "^2.60.0",
-    "xml2json": "^0.7.1"
+    "request": "^2.60.0"
   },
   "devDependencies": {
     "body": "^5.1.0",

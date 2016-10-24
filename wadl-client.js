@@ -2,7 +2,14 @@ var WadlClient = (function() {
   /* Dependency aliases (to make WadlClient work on both node and browser environments) */
   var B = typeof require == "function" && require("baconjs") ? require("baconjs") : Bacon;
   var request = typeof XMLHttpRequest != "undefined" ? null : require("request");
-  var parser = typeof XMLHttpRequest != "undefined" ? null : require("xml2json");
+
+  // If you want xml2json support, add it as a dependency of your project
+  var parser;
+  try{
+    parser = typeof XMLHttpRequest != "undefined" ? null : require("xml2json");
+  } catch(err){
+    parser = null;
+  }
 
   /* Utils */
   var Utils = {};
@@ -32,6 +39,10 @@ var WadlClient = (function() {
       return JSON.parse(typeof response.responseText != "undefined" ? response.responseText : body);
     }
     else if(Utils.elem(contentType || "", ["text/xml", "application/rss+xml", "application/rdf+xml", "application/atom+xml"])) {
+      if(!response.responseXML && !parser){
+        throw new Error("Parser is undefined. Please add xml2json as a dependency in your project");
+      }
+
       return response.responseXML ? response.responseXML : parser.toJson(body, {
         object: true,
         arrayNotation: true
